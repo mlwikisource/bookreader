@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wikimedia Commons Book Reader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Wikimedia Commons Reader</title>
     <!-- Configure Tailwind CSS before loading the CDN script -->
     <script>
         window.tailwind = {
@@ -13,14 +13,17 @@
                         brand: {
                             50: '#f0f9ff',
                             100: '#e0f2fe',
+                            400: '#38bdf8',
                             500: '#0284c7',
                             600: '#0284c7',
                             700: '#0369a1',
+                            800: '#075985',
                             900: '#0c4a6e',
                         }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
                     }
                 }
             }
@@ -29,193 +32,204 @@
     <!-- Tailwind CSS for UI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
-        /* Custom page curl & transition animations */
+        /* Modern smooth animations & perspective */
         .page-container {
-            perspective: 1500px;
+            perspective: 2000px;
         }
 
         .page-card {
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, filter 0.3s ease;
             transform-style: preserve-3d;
+            will-change: transform;
         }
 
         .page-card.flipping-next {
-            animation: flipNext 0.5s ease-in-out forwards;
+            animation: flipNext 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .page-card.flipping-prev {
-            animation: flipPrev 0.5s ease-in-out forwards;
+            animation: flipPrev 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         @keyframes flipNext {
-            0% { transform: rotateY(0deg); }
-            50% { transform: rotateY(-15deg) scale(0.98); }
-            100% { transform: rotateY(0deg); }
+            0% { transform: rotateY(0deg); opacity: 0.8; }
+            50% { transform: rotateY(-12deg) scale(0.97); opacity: 0.9; }
+            100% { transform: rotateY(0deg); opacity: 1; }
         }
 
         @keyframes flipPrev {
-            0% { transform: rotateY(0deg); }
-            50% { transform: rotateY(15deg) scale(0.98); }
-            100% { transform: rotateY(0deg); }
+            0% { transform: rotateY(0deg); opacity: 0.8; }
+            50% { transform: rotateY(12deg) scale(0.97); opacity: 0.9; }
+            100% { transform: rotateY(0deg); opacity: 1; }
         }
 
         /* Loading Spinner Ripple */
         .lds-ripple {
             display: inline-block;
             position: relative;
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
         }
         .lds-ripple div {
             position: absolute;
-            border: 4px solid #0284c7;
+            border: 3px solid #38bdf8;
             opacity: 1;
             border-radius: 50%;
-            animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            animation: lds-ripple 1.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
         }
         .lds-ripple div:nth-child(2) {
-            animation-delay: -0.5s;
+            animation-delay: -0.6s;
         }
         @keyframes lds-ripple {
-            0% { top: 36px; left: 36px; width: 0; height: 0; opacity: 0; }
-            4.9% { top: 36px; left: 36px; width: 0; height: 0; opacity: 0; }
-            5% { top: 36px; left: 36px; width: 0; height: 0; opacity: 1; }
-            100% { top: 0px; left: 0px; width: 72px; height: 72px; opacity: 0; }
+            0% { top: 32px; left: 32px; width: 0; height: 0; opacity: 0; }
+            4.9% { top: 32px; left: 32px; width: 0; height: 0; opacity: 0; }
+            5% { top: 32px; left: 32px; width: 0; height: 0; opacity: 1; }
+            100% { top: 0px; left: 0px; width: 64px; height: 64px; opacity: 0; }
         }
 
-        /* Custom Scrollbars */
+        /* Modern styled scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: rgba(15, 23, 42, 0.6);
         }
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+            background: #334155;
+            border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: #475569;
+        }
+
+        /* Prevent unwanted highlighting on mobile gestures */
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col overflow-hidden no-select">
 
     <!-- Header Navigation Bar -->
-    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 z-30 shadow-md">
-        <!-- Logo & Title -->
-        <div class="flex items-center space-x-3">
-            <div class="bg-brand-600 text-white p-2 rounded-lg flex items-center justify-center shadow">
-                <i class="fa-solid fa-book-open text-lg"></i>
+    <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 md:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 z-30 shadow-lg">
+        <!-- Logo & Active Document Title -->
+        <div class="flex items-center space-x-3 min-w-0">
+            <div class="bg-gradient-to-tr from-brand-700 to-brand-500 text-white p-2 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
+                <i class="fa-solid fa-book-open text-base md:text-lg"></i>
             </div>
-            <div>
-                <h1 class="font-bold text-sm md:text-base leading-tight text-white flex items-center gap-2">
-                    Commons Reader
-                    <span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-normal hidden sm:inline-block">DjVu / PDF</span>
-                </h1>
-                <p id="doc-title" class="text-xs text-slate-400 truncate max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">No file loaded</p>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <h1 class="font-bold text-sm md:text-base leading-tight text-white truncate tracking-tight">
+                        Commons Reader
+                    </h1>
+                    <span class="text-[10px] uppercase font-semibold tracking-wider bg-brand-500/10 text-brand-400 border border-brand-500/20 px-2 py-0.5 rounded-full hidden sm:inline-block">DjVu / PDF</span>
+                </div>
+                <p id="doc-title" class="text-xs text-slate-400 truncate max-w-[150px] sm:max-w-[260px] md:max-w-[380px] font-mono">No file loaded</p>
             </div>
         </div>
 
         <!-- URL Input & Loader Form -->
-        <div class="flex-1 max-w-xl mx-2">
+        <div class="flex-1 order-last md:order-none min-w-[280px] w-full md:w-auto md:max-w-md">
             <form id="url-form" class="relative flex items-center">
-                <i class="fa-solid fa-link absolute left-3 text-slate-400 text-xs"></i>
+                <i class="fa-solid fa-link absolute left-3 text-slate-500 text-xs pointer-events-none"></i>
                 <input type="text" id="wiki-url-input" 
-                    placeholder="Paste Wikimedia Commons File URL (e.g. File:Sample.djvu)" 
-                    class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs sm:text-sm rounded-lg pl-8 pr-20 py-2 focus:outline-none focus:border-brand-500 transition-colors">
-                <button type="submit" class="absolute right-1 bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-md font-medium transition-colors shadow">
-                    Load
+                    placeholder="Enter file or Wikimedia URL (e.g. File:Sample.djvu)" 
+                    class="w-full bg-slate-950/80 border border-slate-700/80 text-slate-200 text-xs rounded-xl pl-8 pr-20 py-2 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-500">
+                <button type="submit" class="absolute right-1 bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1 rounded-lg font-medium transition-all shadow-md active:scale-95 flex items-center gap-1">
+                    <span>Load</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
             </form>
         </div>
 
         <!-- Right Quick Actions -->
-        <div class="flex items-center space-x-2">
-            <button id="btn-fullscreen" title="Toggle Fullscreen" class="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
-                <i class="fa-solid fa-expand text-sm"></i>
+        <div class="flex items-center space-x-1 shrink-0">
+            <button id="btn-info" title="File Info" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+                <i class="fa-solid fa-circle-info text-base"></i>
             </button>
-            <button id="btn-info" title="File Info" class="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
-                <i class="fa-solid fa-circle-info text-sm"></i>
+            <button id="btn-fullscreen" title="Toggle Fullscreen" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+                <i class="fa-solid fa-expand text-base"></i>
             </button>
         </div>
     </header>
 
-    <!-- Toolbar Options -->
-    <div class="bg-slate-800/60 border-b border-slate-700/60 px-4 py-2 flex flex-wrap items-center justify-between gap-4 text-xs z-20">
+    <!-- Toolbar Controls Bar -->
+    <div class="bg-slate-900/80 border-b border-slate-800/80 px-3 md:px-5 py-1.5 flex items-center justify-between gap-2 text-xs z-20 overflow-x-auto no-scrollbar">
         
         <!-- View Mode Switches (1, 2, 3 pages layout) -->
-        <div class="flex items-center space-x-1 bg-slate-900/80 p-1 rounded-lg border border-slate-700">
-            <span class="text-slate-400 px-2 text-[11px] font-medium hidden sm:inline">Layout:</span>
-            <button id="btn-layout-1" class="layout-btn px-2.5 py-1 rounded text-slate-300 hover:bg-slate-700 transition font-medium flex items-center gap-1.5" data-pages="1">
-                <i class="fa-solid fa-file"></i> 1 Page
+        <div class="flex items-center bg-slate-950/90 p-1 rounded-xl border border-slate-800 shrink-0">
+            <span class="text-slate-400 text-[10px] font-semibold uppercase px-2 hidden lg:inline-block tracking-wider">Layout:</span>
+            <button id="btn-layout-1" class="layout-btn px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 transition font-medium flex items-center gap-1.5 text-xs" data-pages="1">
+                <i class="fa-solid fa-file text-xs"></i> <span class="hidden sm:inline">1 Page</span><span class="sm:hidden">1P</span>
             </button>
-            <button id="btn-layout-2" class="layout-btn px-2.5 py-1 rounded text-slate-300 hover:bg-slate-700 transition font-medium flex items-center gap-1.5" data-pages="2">
-                <i class="fa-solid fa-book-open"></i> 2 Pages
+            <button id="btn-layout-2" class="layout-btn px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 transition font-medium flex items-center gap-1.5 text-xs" data-pages="2">
+                <i class="fa-solid fa-book-open text-xs"></i> <span class="hidden sm:inline">2 Spread</span><span class="sm:hidden">2P</span>
             </button>
-            <button id="btn-layout-3" class="layout-btn px-2.5 py-1 rounded text-slate-300 hover:bg-slate-700 transition font-medium flex items-center gap-1.5" data-pages="3">
-                <i class="fa-solid fa-table-columns"></i> 3 Pages
+            <button id="btn-layout-3" class="layout-btn px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 transition font-medium flex items-center gap-1.5 text-xs" data-pages="3">
+                <i class="fa-solid fa-table-columns text-xs"></i> <span class="hidden sm:inline">3 Grid</span><span class="sm:hidden">3P</span>
             </button>
         </div>
 
         <!-- Page Navigation Controls -->
-        <div class="flex items-center space-x-2">
-            <button id="btn-first-page" title="First Page" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
-                <i class="fa-solid fa-angles-left"></i>
+        <div class="flex items-center space-x-1 shrink-0">
+            <button id="btn-first-page" title="First Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
+                <i class="fa-solid fa-angles-left text-xs"></i>
             </button>
-            <button id="btn-prev-page" title="Previous Page" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
-                <i class="fa-solid fa-chevron-left"></i>
+            <button id="btn-prev-page" title="Previous Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
             </button>
             
-            <div class="flex items-center space-x-1.5 bg-slate-900 px-2 py-1 rounded border border-slate-700">
-                <span class="text-slate-400 text-[11px]">Page</span>
-                <input type="number" id="page-number-input" min="1" value="1" class="w-12 bg-slate-800 text-center text-white text-xs rounded border border-slate-600 focus:outline-none focus:border-brand-500 py-0.5">
-                <span id="total-pages-display" class="text-slate-400 text-[11px]">/ --</span>
+            <div class="flex items-center space-x-1.5 bg-slate-950/90 px-2.5 py-1 rounded-xl border border-slate-800">
+                <span class="text-slate-400 text-[11px] font-medium hidden sm:inline">Page</span>
+                <input type="number" id="page-number-input" min="1" value="1" class="w-12 bg-slate-800 text-center text-white text-xs rounded-md border border-slate-700 focus:outline-none focus:border-brand-500 py-0.5 font-mono">
+                <span id="total-pages-display" class="text-slate-400 text-[11px] font-mono">/ --</span>
             </div>
 
-            <button id="btn-next-page" title="Next Page" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
-                <i class="fa-solid fa-chevron-right"></i>
+            <button id="btn-next-page" title="Next Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
             </button>
-            <button id="btn-last-page" title="Last Page" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
-                <i class="fa-solid fa-angles-right"></i>
+            <button id="btn-last-page" title="Last Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
+                <i class="fa-solid fa-angles-right text-xs"></i>
             </button>
         </div>
 
         <!-- Zoom Controls -->
-        <div class="flex items-center space-x-1 bg-slate-900/80 p-1 rounded-lg border border-slate-700">
-            <button id="btn-zoom-out" title="Zoom Out" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition">
-                <i class="fa-solid fa-magnifying-glass-minus"></i>
+        <div class="flex items-center bg-slate-950/90 p-1 rounded-xl border border-slate-800 shrink-0">
+            <button id="btn-zoom-out" title="Zoom Out" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                <i class="fa-solid fa-minus text-xs"></i>
             </button>
             <span id="zoom-level-text" class="text-slate-300 w-12 text-center text-[11px] font-mono">100%</span>
-            <button id="btn-zoom-in" title="Zoom In" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition">
-                <i class="fa-solid fa-magnifying-glass-plus"></i>
+            <button id="btn-zoom-in" title="Zoom In" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
+                <i class="fa-solid fa-plus text-xs"></i>
             </button>
-            <button id="btn-zoom-reset" title="Reset Zoom" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition text-[11px]">
+            <button id="btn-zoom-reset" title="Reset Zoom" class="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition text-[10px] ml-0.5">
                 <i class="fa-solid fa-rotate-left"></i>
             </button>
         </div>
     </div>
 
     <!-- Main Viewport Area -->
-    <main class="relative flex-1 bg-slate-950 overflow-hidden flex items-center justify-center p-2 sm:p-4">
+    <main id="main-viewport" class="relative flex-1 bg-slate-950 overflow-hidden flex items-center justify-center p-2 sm:p-4 select-none">
         
-        <!-- Side Navigation Arrows (Overlay) -->
-        <button id="arrow-prev" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-slate-800/80 hover:bg-brand-600 text-white w-10 h-14 rounded-r-xl flex items-center justify-center border-y border-r border-slate-600 transition-all shadow-lg backdrop-blur disabled:opacity-20">
+        <!-- Floating Navigation Hotspots / Side Arrows -->
+        <button id="arrow-prev" aria-label="Previous Page" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-slate-900/90 hover:bg-brand-600 text-slate-300 hover:text-white w-10 h-16 rounded-2xl flex items-center justify-center border border-slate-700/80 transition-all shadow-xl backdrop-blur disabled:opacity-0 disabled:pointer-events-none">
             <i class="fa-solid fa-chevron-left text-lg"></i>
         </button>
-        <button id="arrow-next" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-slate-800/80 hover:bg-brand-600 text-white w-10 h-14 rounded-l-xl flex items-center justify-center border-y border-l border-slate-600 transition-all shadow-lg backdrop-blur disabled:opacity-20">
+        <button id="arrow-next" aria-label="Next Page" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-slate-900/90 hover:bg-brand-600 text-slate-300 hover:text-white w-10 h-16 rounded-2xl flex items-center justify-center border border-slate-700/80 transition-all shadow-xl backdrop-blur disabled:opacity-0 disabled:pointer-events-none">
             <i class="fa-solid fa-chevron-right text-lg"></i>
         </button>
 
         <!-- Dynamic Book Stage Container -->
         <div id="reader-stage" class="w-full h-full overflow-auto flex items-center justify-center p-2">
-            <div id="pages-wrapper" class="page-container flex items-center justify-center gap-4 transition-transform duration-200">
+            <div id="pages-wrapper" class="page-container flex flex-col md:flex-row items-center justify-center gap-4 transition-transform duration-200 max-w-full">
                 <!-- Page Cards dynamically injected here -->
             </div>
         </div>
@@ -223,43 +237,18 @@
         <!-- Animated Loading Overlay -->
         <div id="loading-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center z-40 transition-opacity duration-300">
             <div class="lds-ripple"><div></div><div></div></div>
-            <p id="loading-status" class="mt-4 text-slate-200 font-medium text-sm">Initializing Reader...</p>
+            <p id="loading-status" class="mt-4 text-slate-200 font-semibold text-sm">Initializing Reader...</p>
             <p id="loading-subtext" class="text-xs text-slate-400 mt-1">Fetching metadata from Wikimedia Commons API</p>
         </div>
 
-        <!-- Initial Welcome State / Quick Presets -->
-        <div id="welcome-modal" class="absolute inset-0 bg-slate-900/95 z-30 flex items-center justify-center p-4 hidden">
-            <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl text-center">
-                <div class="w-12 h-12 bg-brand-600/20 text-brand-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-book text-xl"></i>
-                </div>
-                <h2 class="text-lg font-bold text-white mb-2">Welcome to Commons Book Reader</h2>
-                <p class="text-xs text-slate-300 mb-6">Explore thousands of open books, manuscripts, and DjVu/PDF documents directly hosted on Wikimedia Commons.</p>
-                
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Or try a sample book:</p>
-                <div class="space-y-2 text-left">
-                    <button class="sample-btn w-full bg-slate-700/60 hover:bg-slate-700 p-2.5 rounded-lg border border-slate-600 text-xs flex items-center justify-between text-slate-200 transition"
-                            data-url="https://commons.wikimedia.org/wiki/File:Kulastreeyum_Chanthapennum_Undayathengane.djvu">
-                        <span class="truncate pr-2 font-medium">Kulastreeyum Chanthapennum Undayathengane.djvu</span>
-                        <i class="fa-solid fa-arrow-right text-brand-500 text-xs"></i>
-                    </button>
-                    <button class="sample-btn w-full bg-slate-700/60 hover:bg-slate-700 p-2.5 rounded-lg border border-slate-600 text-xs flex items-center justify-between text-slate-200 transition"
-                            data-url="https://commons.wikimedia.org/wiki/File:Alice_in_Wonderland.djvu">
-                        <span class="truncate pr-2 font-medium">Alice in Wonderland.djvu</span>
-                        <i class="fa-solid fa-arrow-right text-brand-500 text-xs"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- File Metadata Info Modal -->
-        <div id="info-modal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-            <div class="max-w-lg w-full bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4">
+        <div id="info-modal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                     <h3 class="font-bold text-base text-white flex items-center gap-2">
-                        <i class="fa-solid fa-circle-info text-brand-500"></i> Document Information
+                        <i class="fa-solid fa-circle-info text-brand-400"></i> Document Information
                     </h3>
-                    <button id="btn-close-info" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+                    <button id="btn-close-info" class="text-slate-400 hover:text-white p-1 text-lg rounded-lg hover:bg-slate-800 transition"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div id="info-content" class="space-y-3 text-xs text-slate-300 max-h-[60vh] overflow-y-auto pr-1">
                     <!-- Dynamic Info Inject -->
@@ -267,6 +256,17 @@
             </div>
         </div>
     </main>
+
+    <!-- Bottom Status Bar -->
+    <footer class="bg-slate-900/90 border-t border-slate-800 px-4 py-1.5 text-[11px] text-slate-400 flex items-center justify-between z-10">
+        <div class="flex items-center gap-2">
+            <span id="footer-page-indicator" class="font-medium text-slate-300">Page -- / --</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-3 text-slate-500">
+            <span><kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">←</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">→</kbd> Navigate</span>
+            <span><kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">+</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">-</kbd> Zoom</span>
+        </div>
+    </footer>
 
     <!-- Reader Application Logic Script -->
     <script>
@@ -281,12 +281,17 @@
                 this.currentPage = 1;
                 this.pagesPerView = 1;
                 this.zoomLevel = 1.0;
-                this.pageWidth = 800; // Base rendered page width resolution
+                this.pageWidth = 1000; // Base rendering quality resolution
                 this.fileInfo = {};
                 this.isLoading = false;
 
+                // Touch swipe tracking variables
+                this.touchStartX = 0;
+                this.touchEndX = 0;
+
                 // DOM Reference Elements
                 this.elements = {
+                    viewport: document.getElementById('main-viewport'),
                     stage: document.getElementById('reader-stage'),
                     wrapper: document.getElementById('pages-wrapper'),
                     loadingOverlay: document.getElementById('loading-overlay'),
@@ -298,9 +303,9 @@
                     pageInput: document.getElementById('page-number-input'),
                     totalPagesDisplay: document.getElementById('total-pages-display'),
                     zoomDisplay: document.getElementById('zoom-level-text'),
-                    welcomeModal: document.getElementById('welcome-modal'),
                     infoModal: document.getElementById('info-modal'),
                     infoContent: document.getElementById('info-content'),
+                    footerPageIndicator: document.getElementById('footer-page-indicator'),
                     btnPrev: document.getElementById('btn-prev-page'),
                     btnNext: document.getElementById('btn-next-page'),
                     btnFirst: document.getElementById('btn-first-page'),
@@ -314,7 +319,7 @@
             }
 
             /**
-             * Initialize event handlers and listeners
+             * Initialize event handlers and touch/keyboard listeners
              */
             initEvents() {
                 // Form Submit URL Loading
@@ -352,26 +357,16 @@
                 document.getElementById('btn-zoom-out').addEventListener('click', () => this.adjustZoom(-0.15));
                 document.getElementById('btn-zoom-reset').addEventListener('click', () => this.resetZoom());
 
-                // Sample Preset Buttons
-                document.querySelectorAll('.sample-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const url = e.currentTarget.getAttribute('data-url');
-                        this.elements.urlInput.value = url;
-                        this.elements.welcomeModal.classList.add('hidden');
-                        this.loadFromUrl(url);
-                    });
-                });
-
                 // Fullscreen Toggle
                 document.getElementById('btn-fullscreen').addEventListener('click', () => {
                     if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(err => {});
+                        document.documentElement.requestFullscreen().catch(() => {});
                     } else {
                         if (document.exitFullscreen) document.exitFullscreen();
                     }
                 });
 
-                // Document Metadata Modal Toggle
+                // Metadata Modal
                 document.getElementById('btn-info').addEventListener('click', () => {
                     if (this.fileName) {
                         this.elements.infoModal.classList.remove('hidden');
@@ -381,16 +376,43 @@
                     this.elements.infoModal.classList.add('hidden');
                 });
 
-                // Keyboard Controls Navigation
+                // Keyboard Shortcuts
                 window.addEventListener('keydown', (e) => {
                     if (e.target.tagName === 'INPUT') return;
                     if (e.key === 'ArrowLeft') this.navigatePage(-this.pagesPerView);
                     if (e.key === 'ArrowRight') this.navigatePage(this.pagesPerView);
+                    if (e.key === '+' || e.key === '=') this.adjustZoom(0.15);
+                    if (e.key === '-') this.adjustZoom(-0.15);
+                    if (e.key === '0') this.resetZoom();
                 });
+
+                // Touch / Swipe Navigation Support
+                this.elements.viewport.addEventListener('touchstart', (e) => {
+                    this.touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+
+                this.elements.viewport.addEventListener('touchend', (e) => {
+                    this.touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipeGesture();
+                }, { passive: true });
+            }
+
+            handleSwipeGesture() {
+                const swipeThreshold = 50; // threshold in pixels
+                const diff = this.touchStartX - this.touchEndX;
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        // Swiped left -> Next page
+                        this.navigatePage(this.pagesPerView);
+                    } else {
+                        // Swiped right -> Previous page
+                        this.navigatePage(-this.pagesPerView);
+                    }
+                }
             }
 
             /**
-             * Auto load file if specified in URL query parameter or hash
+             * Auto load file if specified in URL query parameter
              */
             checkUrlParams() {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -400,7 +422,7 @@
                     this.elements.urlInput.value = fileParam;
                     this.loadFromUrl(fileParam);
                 } else {
-                    // Default Auto-load file requested in prompt
+                    // Default file load sample
                     const defaultUrl = 'https://commons.wikimedia.org/wiki/File:Kulastreeyum_Chanthapennum_Undayathengane.djvu';
                     this.elements.urlInput.value = defaultUrl;
                     this.loadFromUrl(defaultUrl);
@@ -408,22 +430,18 @@
             }
 
             /**
-             * Parse Wikimedia File Name from various input string formats
+             * Parse Wikimedia File Name from input
              */
             extractFileName(input) {
                 let clean = input.trim();
-                // Decode URI if copy pasted
                 try { clean = decodeURIComponent(clean); } catch(e){}
 
-                // If full Commons URL provided
                 if (clean.includes('wikimedia.org/wiki/')) {
                     clean = clean.split('wikimedia.org/wiki/')[1];
                 }
                 
-                // Strip redundant anchor links or parameters
                 clean = clean.split('?')[0].split('#')[0];
 
-                // Ensure "File:" prefix
                 if (!clean.startsWith('File:')) {
                     clean = 'File:' + clean;
                 }
@@ -438,12 +456,11 @@
                 const fileName = this.extractFileName(url);
                 if (!fileName) return;
 
-                this.showLoading(true, 'Connecting to Wikimedia Commons...', 'Parsing document structure');
+                this.showLoading(true, 'Connecting to Wikimedia Commons...', 'Fetching document structure');
                 this.fileName = fileName;
-                this.elements.docTitle.innerText = fileName.replace('File:', '');
+                this.elements.docTitle.innerText = fileName.replace('File:', '').replaceAll('_', ' ');
 
                 try {
-                    // Step 1: Query Commons API for page count & metadata
                     const apiUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileName)}&prop=imageinfo&iiprop=size|mime|url|extmetadata&format=json&origin=*`;
                     
                     const response = await fetch(apiUrl);
@@ -461,7 +478,6 @@
                         throw new Error('Unable to retrieve image details.');
                     }
 
-                    // Extract Metadata
                     this.fileInfo = {
                         mime: imageInfo.mime,
                         size: (imageInfo.size / (1024 * 1024)).toFixed(2) + ' MB',
@@ -472,25 +488,20 @@
                         extmetadata: imageInfo.extmetadata || {}
                     };
 
-                    // Extract page count (for DJVU & PDF files)
                     this.totalPages = imageInfo.page_count || 1;
                     this.currentPage = 1;
 
-                    // Update UI Toolbar Labels
                     this.elements.totalPagesDisplay.innerText = `/ ${this.totalPages}`;
                     this.elements.pageInput.max = this.totalPages;
                     this.updateInfoModal();
 
-                    // Render First Set of Pages
                     this.setLayoutMode(1);
                     await this.renderCurrentView();
 
-                    // Update URL Hash without reload (safely guarded against sandboxed iframe/blob origins)
                     try {
                         history.replaceState(null, '', `?file=${encodeURIComponent(fileName)}`);
                     } catch (e) {
-                        // Suppress history API restrictions in sandboxed or blob environments
-                        console.warn('History state update skipped due to environment security policy:', e);
+                        console.warn('History state update suppressed:', e);
                     }
 
                 } catch (error) {
@@ -502,29 +513,27 @@
             }
 
             /**
-             * Generate Wikimedia Commons rendered thumbnail URL for a given page
+             * Generate Wikimedia Commons rendered page thumbnail URL
              */
             getPageImageUrl(pageNumber, width = this.pageWidth) {
                 const cleanName = this.fileName.replace('File:', '');
-                // Wikimedia render API endpoint format for DjVu and PDF pages
                 return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(cleanName)}?width=${width}&page=${pageNumber}`;
             }
 
             /**
-             * Set 1-page, 2-page, or 3-page layout mode
+             * Set layout view mode
              */
             setLayoutMode(count) {
                 this.pagesPerView = count;
 
-                // Highlight active button
                 document.querySelectorAll('.layout-btn').forEach(btn => {
                     const btnCount = parseInt(btn.getAttribute('data-pages'));
                     if (btnCount === count) {
-                        btn.classList.add('bg-brand-600', 'text-white');
-                        btn.classList.remove('text-slate-300');
+                        btn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+                        btn.classList.remove('text-slate-300', 'hover:bg-slate-800');
                     } else {
-                        btn.classList.remove('bg-brand-600', 'text-white');
-                        btn.classList.add('text-slate-300');
+                        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                        btn.classList.add('text-slate-300', 'hover:bg-slate-800');
                     }
                 });
 
@@ -532,7 +541,7 @@
             }
 
             /**
-             * Render currently active pages into stage
+             * Render active view pages into DOM
              */
             async renderCurrentView(direction = 'none') {
                 if (!this.fileName) return;
@@ -547,27 +556,26 @@
                     }
                 }
 
-                // Populate Page Cards
+                // Render page cards
                 pagesToRender.forEach(pageNum => {
                     const card = document.createElement('div');
-                    card.className = 'page-card relative bg-slate-800 rounded-lg overflow-hidden border border-slate-700 shadow-2xl flex flex-col items-center justify-between min-h-[300px] transition-all';
+                    card.className = 'page-card relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col items-center justify-between min-h-[350px] max-w-full transition-all';
                     
-                    // Add Page-Swapping Animation classes
                     if (direction === 'next') card.classList.add('flipping-next');
                     if (direction === 'prev') card.classList.add('flipping-prev');
 
-                    // Loader placeholder inside card
+                    // Loader element
                     const loader = document.createElement('div');
-                    loader.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-800 z-10';
+                    loader.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-10 p-4 text-center';
                     loader.innerHTML = `
-                        <i class="fa-solid fa-spinner fa-spin text-brand-500 text-2xl mb-2"></i>
-                        <span class="text-xs text-slate-400">Loading Page ${pageNum}...</span>
+                        <i class="fa-solid fa-spinner fa-spin text-brand-400 text-2xl mb-3"></i>
+                        <span class="text-xs text-slate-400 font-medium">Loading Page ${pageNum}...</span>
                     `;
                     card.appendChild(loader);
 
                     // Page Image
                     const img = document.createElement('img');
-                    img.className = 'max-h-[75vh] w-auto object-contain block transition-opacity duration-300 opacity-0';
+                    img.className = 'max-h-[72vh] md:max-h-[78vh] w-auto max-w-full object-contain block transition-opacity duration-300 opacity-0';
                     img.alt = `Page ${pageNum}`;
                     img.src = this.getPageImageUrl(pageNum);
 
@@ -578,14 +586,14 @@
 
                     img.onerror = () => {
                         loader.innerHTML = `
-                            <i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl mb-2"></i>
-                            <span class="text-xs text-slate-400">Failed to load Page ${pageNum}</span>
+                            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-2xl mb-2"></i>
+                            <span class="text-xs text-slate-400">Failed to render Page ${pageNum}</span>
                         `;
                     };
 
-                    // Page Footer Tag
+                    // Bottom Tag
                     const pageTag = document.createElement('div');
-                    pageTag.className = 'w-full text-center py-1.5 bg-slate-900/90 text-slate-400 text-[11px] border-t border-slate-700/80 font-mono';
+                    pageTag.className = 'w-full text-center py-1.5 bg-slate-950/90 text-slate-400 text-[11px] border-t border-slate-800 font-mono';
                     pageTag.innerText = `Page ${pageNum} of ${this.totalPages}`;
 
                     card.appendChild(img);
@@ -593,13 +601,19 @@
                     this.elements.wrapper.appendChild(card);
                 });
 
-                // Sync Page Input and Buttons
+                // Sync controls & footer
                 this.elements.pageInput.value = this.currentPage;
+                const endPage = Math.min(this.currentPage + this.pagesPerView - 1, this.totalPages);
+                const pageRangeStr = this.pagesPerView > 1 && endPage > this.currentPage 
+                    ? `Pages ${this.currentPage}-${endPage} / ${this.totalPages}`
+                    : `Page ${this.currentPage} / ${this.totalPages}`;
+                this.elements.footerPageIndicator.innerText = pageRangeStr;
+
                 this.updateNavButtons();
             }
 
             /**
-             * Navigate current page with offset
+             * Navigation logic
              */
             navigatePage(offset) {
                 const newPage = this.currentPage + offset;
@@ -607,9 +621,6 @@
                 this.goToPage(newPage, direction);
             }
 
-            /**
-             * Jump to a specific page number
-             */
             goToPage(pageNumber, direction = 'none') {
                 if (pageNumber < 1) pageNumber = 1;
                 if (pageNumber > this.totalPages) pageNumber = this.totalPages;
@@ -637,7 +648,7 @@
             }
 
             /**
-             * Update status of navigation buttons
+             * Update navigation UI buttons status
              */
             updateNavButtons() {
                 const isFirst = this.currentPage <= 1;
@@ -653,36 +664,32 @@
             }
 
             /**
-             * Populate Metadata Info Modal
+             * Populate Metadata Modal
              */
             updateInfoModal() {
                 const meta = this.fileInfo.extmetadata || {};
-                
                 const getVal = (key) => meta[key] ? meta[key].value : 'N/A';
 
                 this.elements.infoContent.innerHTML = `
-                    <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 space-y-1.5">
-                        <div class="flex justify-between"><span class="text-slate-400">File Name:</span> <span class="font-medium text-white truncate max-w-[200px]">${this.fileName.replace('File:', '')}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">Total Pages:</span> <span class="font-medium text-white">${this.totalPages}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">MIME Type:</span> <span class="font-medium text-white">${this.fileInfo.mime || 'N/A'}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">Original Size:</span> <span class="font-medium text-white">${this.fileInfo.size}</span></div>
+                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2 font-mono text-[11px]">
+                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">File:</span> <span class="font-medium text-white truncate">${this.fileName.replace('File:', '')}</span></div>
+                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Total Pages:</span> <span class="font-medium text-white">${this.totalPages}</span></div>
+                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">MIME Type:</span> <span class="font-medium text-white">${this.fileInfo.mime || 'N/A'}</span></div>
+                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">File Size:</span> <span class="font-medium text-white">${this.fileInfo.size}</span></div>
                     </div>
-                    <div class="space-y-2 pt-2">
-                        <div><strong class="text-slate-300">Object Name / Title:</strong> <p class="text-slate-400 mt-0.5">${getVal('ObjectName')}</p></div>
-                        <div><strong class="text-slate-300">License:</strong> <p class="text-slate-400 mt-0.5">${getVal('LicenseShortName')}</p></div>
-                        <div><strong class="text-slate-300">Categories / Authors:</strong> <p class="text-slate-400 mt-0.5">${getVal('Artist') || getVal('Categories')}</p></div>
+                    <div class="space-y-2.5 pt-2">
+                        <div><strong class="text-slate-300 block">Title / Object Name:</strong> <p class="text-slate-400 mt-0.5 text-xs">${getVal('ObjectName')}</p></div>
+                        <div><strong class="text-slate-300 block">License:</strong> <p class="text-slate-400 mt-0.5 text-xs">${getVal('LicenseShortName')}</p></div>
+                        <div><strong class="text-slate-300 block">Artist / Author:</strong> <p class="text-slate-400 mt-0.5 text-xs">${getVal('Artist') || getVal('Categories')}</p></div>
                     </div>
-                    <div class="pt-3 border-t border-slate-700">
-                        <a href="${this.fileInfo.descriptionUrl}" target="_blank" class="inline-flex items-center gap-2 text-brand-500 hover:text-brand-400 text-xs font-medium">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> View original file page on Wikimedia Commons
+                    <div class="pt-3 border-t border-slate-800">
+                        <a href="${this.fileInfo.descriptionUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 text-xs font-medium">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open on Wikimedia Commons
                         </a>
                     </div>
                 `;
             }
 
-            /**
-             * Loading State Indicator
-             */
             showLoading(show, title = 'Loading...', subtext = '') {
                 this.isLoading = show;
                 if (show) {
@@ -695,7 +702,7 @@
             }
         }
 
-        // Initialize application on window load
+        // Initialize application on load
         window.addEventListener('DOMContentLoaded', () => {
             window.readerApp = new CommonsReader();
         });
