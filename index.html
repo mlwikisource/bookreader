@@ -46,13 +46,15 @@ main{padding:18px 14px 40px;max-width:1500px;margin:0 auto}
 .msg{text-align:center;color:var(--mute);padding:50px 10px}
 .msg.err{color:#c0392b}
 footer{text-align:center;color:var(--mute);font-size:12.5px;padding:0 14px 24px}
+#rd{position:fixed;inset:0;width:100%;height:100%;border:0;background:var(--desk)}
+body.rm header,body.rm main,body.rm footer,body.rm #prog{display:none}
 @media (prefers-reduced-motion:reduce){.card{transition:none}#prog.on::after{animation-duration:2.4s}}
 </style>
 </head>
 <body>
 <header>
   <h1>Commons Reader<small>Malayalam Wikisource book gallery · മലയാളം വിക്കിഗ്രന്ഥശാല</small></h1>
-  <nav class="tabs" aria-label="Site"><a href="./" aria-current="page">Gallery</a><a href="reader/">Reader</a></nav>
+  <nav class="tabs" aria-label="Site"><a href="./" aria-current="page">Gallery</a><a href="?file=">Reader</a></nav>
   <input id="q" class="f" type="search" placeholder="Search title or file name…" aria-label="Search">
   <div class="seg" id="types" role="group" aria-label="File type">
     <button data-t="" aria-pressed="true">All</button><button data-t="pdf" aria-pressed="false">PDF</button><button data-t="djvu" aria-pressed="false">DjVu</button>
@@ -68,9 +70,22 @@ footer{text-align:center;color:var(--mute);font-size:12.5px;padding:0 14px 24px}
 </main>
 <footer>Commons Reader · covers are page 1 of each file on Wikimedia Commons (or ml.wikisource.org); titles come from Wikidata. Click a book to open it in the reader.</footer>
 
+<iframe id="rd" title="Commons Reader" hidden></iframe>
 <script>
 const $=s=>document.querySelector(s);
-const READER='reader/', WD='https://www.wikidata.org/w/api.php';
+/* ?file=… shows the reader on this same address (no /reader/ in the URL) */
+const RM=new URLSearchParams(location.search).has('file');
+if(RM){
+  document.body.classList.add('rm');
+  const fr=$('#rd'); fr.src='reader/'+location.search; fr.hidden=false;
+  fr.addEventListener('load',()=>{try{fr.contentWindow.focus()}catch(e){}});
+  addEventListener('message',e=>{
+    if(e.origin!==location.origin||!e.data||!e.data.file) return;
+    const u=new URL(location.href); u.searchParams.set('file',e.data.file);
+    history.replaceState(null,'',u); if(e.data.title) document.title=e.data.title;
+  });
+}
+const READER='', WD='https://www.wikidata.org/w/api.php';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let books=[], type='';
 
@@ -169,6 +184,7 @@ function setBooks(list){
 }
 
 (async()=>{
+  if(RM) return;
   const names=['books.tsv','books.txt','books.tsv.txt']; let why='';
   for(const n of names){
     try{
