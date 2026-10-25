@@ -44,7 +44,6 @@ main{padding:18px 14px 40px;max-width:1500px;margin:0 auto}
 .ln{margin-top:auto;padding-top:6px;display:flex;gap:10px;font-size:12px;flex-wrap:wrap}
 .msg{text-align:center;color:var(--mute);padding:50px 10px}
 .msg.err{color:#c0392b}
-.drop{outline:3px dashed var(--accent);outline-offset:-10px}
 footer{text-align:center;color:var(--mute);font-size:12.5px;padding:0 14px 24px}
 @media (prefers-reduced-motion:reduce){.card{transition:none}#prog.on::after{animation-duration:2.4s}}
 </style>
@@ -58,7 +57,6 @@ footer{text-align:center;color:var(--mute);font-size:12.5px;padding:0 14px 24px}
   </div>
   <select id="sort" class="f" aria-label="Sort"><option value="list">List order</option><option value="az">Title A–Z</option><option value="type">File type</option></select>
   <span id="count"></span>
-  <label class="btn" title="Preview another list (tab-separated: file name, Wikidata QID)">Open list…<input id="pick" type="file" accept=".tsv,.txt,.csv" hidden></label>
   <button class="btn" id="theme" aria-label="Toggle dark mode">◐</button>
 </header>
 <div id="prog" class="on"></div>
@@ -111,7 +109,14 @@ function render(){
   g.querySelectorAll('.card').forEach(c=>{
     const img=c.querySelector('img');
     img.addEventListener('load',()=>c.querySelector('.ph')?.remove());
-    img.addEventListener('error',()=>img.remove());
+    img.addEventListener('error',()=>{
+      if(img.dataset.ws){img.remove();return;}
+      // not served from Commons: use the file on Malayalam Wikisource
+      img.dataset.ws=1; const b=books[+c.dataset.i];
+      img.src='https://ml.wikisource.org/wiki/Special:FilePath/'+fileUrl(b.f)+'?width=320';
+      const a=c.querySelector('.ln a[href*="commons.wikimedia.org"]');
+      if(a){a.href='https://ml.wikisource.org/wiki/File:'+fileUrl(b.f);a.textContent='File page';}
+    });
   });
   applyFilter();
 }
@@ -167,18 +172,13 @@ function setBooks(list){
 }
 
 fetch('books.tsv').then(r=>{if(!r.ok)throw 0;return r.text();}).then(t=>setBooks(parseList(t)))
- .catch(()=>{ $('#prog').classList.remove('on'); $('#msg').className='msg err'; $('#msg').innerHTML='Could not load <code>books.tsv</code>. Put it next to this page, or use “Open list…”.'; });
+ .catch(()=>{ $('#prog').classList.remove('on'); $('#msg').className='msg err'; $('#msg').innerHTML='Could not load <code>books.tsv</code>. Put it in the same folder as this page.'; });
 
 $('#q').addEventListener('input',applyFilter);
 $('#sort').addEventListener('change',applySort);
 $('#types').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;type=b.dataset.t;
   document.querySelectorAll('#types button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));applyFilter();});
 $('#theme').onclick=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).colorScheme==='dark'?'light':'dark';};
-const readFile=f=>f&&f.text().then(t=>setBooks(parseList(t)));
-$('#pick').addEventListener('change',e=>readFile(e.target.files[0]));
-addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('drop');});
-addEventListener('dragleave',()=>document.body.classList.remove('drop'));
-addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('drop');readFile(e.dataTransfer.files[0]);});
 </script>
 </body>
 </html>
