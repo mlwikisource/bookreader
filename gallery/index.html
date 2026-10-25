@@ -171,8 +171,20 @@ function setBooks(list){
   $('#msg').className='msg'; render(); applySort(); loadLabels();
 }
 
-fetch('books.tsv').then(r=>{if(!r.ok)throw 0;return r.text();}).then(t=>setBooks(parseList(t)))
- .catch(()=>{ $('#prog').classList.remove('on'); $('#msg').className='msg err'; $('#msg').innerHTML='Could not load <code>books.tsv</code>. Put it in the same folder as this page.'; });
+(async()=>{
+  const names=['books.tsv','books.txt','books.tsv.txt']; let why='';
+  for(const n of names){
+    try{
+      const r=await fetch(n,{cache:'no-cache'});
+      if(!r.ok){why+=n+' → HTTP '+r.status+'\n';continue;}
+      const t=await r.text(); setBooks(parseList(t)); return;
+    }catch(e){why+=n+' → '+(location.protocol==='file:'?'blocked (page opened as a local file)':'network error')+'\n';}
+  }
+  $('#prog').classList.remove('on'); $('#msg').className='msg err';
+  $('#msg').innerHTML='Could not load <code>books.tsv</code>.<br><small>Looked for it next to this page ('+esc(new URL('.',location.href).href)+').'+
+    (location.protocol==='file:'?'<br>This page was opened as a local file; browsers block that. Open it from GitHub Pages or run <code>python3 -m http.server</code> in the bookreader folder.':'<br>Check the file name and that it is inside the <code>gallery</code> folder.')+
+    '</small><pre style="text-align:left;display:inline-block;font-size:12px">'+esc(why)+'</pre>';
+})();
 
 $('#q').addEventListener('input',applyFilter);
 $('#sort').addEventListener('change',applySort);
