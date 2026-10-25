@@ -1,711 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Wikimedia Commons Reader</title>
-    <!-- Configure Tailwind CSS before loading the CDN script -->
-    <script>
-        window.tailwind = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            400: '#38bdf8',
-                            500: '#0284c7',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
-                    }
-                }
-            }
-        };
-    </script>
-    <!-- Tailwind CSS for UI -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commons Reader</title>
+<style>
+:root{
+  --desk:#dde2ea;--bar:#f7f8fa;--ink:#1b2230;--mute:#5d6778;--line:#c9d0db;--accent:#2a5db0;--accent-ink:#fff;--paper:#fff;--shadow:0 6px 24px rgba(20,30,50,.22);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#161b26;--bar:#202736;--ink:#e8ecf3;--mute:#9aa5b8;--line:#33405a;--accent:#6ea2f0;--accent-ink:#0d1626;--paper:#f5f5f2;--shadow:0 8px 28px rgba(0,0,0,.55);color-scheme:dark;}}
+:root[data-theme="dark"]{--desk:#161b26;--bar:#202736;--ink:#e8ecf3;--mute:#9aa5b8;--line:#33405a;--accent:#6ea2f0;--accent-ink:#0d1626;--paper:#f5f5f2;--shadow:0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--desk);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-    <style>
-        /* Modern smooth animations & perspective */
-        .page-container {
-            perspective: 2000px;
-        }
+/* header */
+header{background:var(--bar);border-bottom:1px solid var(--line);padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;z-index:5}
+.brand{font:600 17px Georgia,"Times New Roman",serif;letter-spacing:.2px;margin-right:4px;white-space:nowrap}
+.load{display:flex;flex:1 1 320px;min-width:220px;gap:6px}
+.load input{flex:1;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--desk)}
+.btn{padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bar)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn:disabled{opacity:.4;cursor:default}
+.grp{display:flex;align-items:center;gap:4px}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--bar);padding:6px 10px}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.pn input{width:62px;padding:6px 6px;text-align:center;border:1px solid var(--line);border-radius:6px;background:var(--desk)}
+.pn span{color:var(--mute);white-space:nowrap}
+.zm{min-width:52px;text-align:center;color:var(--mute)}
+#prog{height:3px;background:transparent;overflow:hidden;position:relative}
+#prog.on::after{content:"";position:absolute;inset:0 auto 0 0;width:35%;background:var(--accent);animation:slide 1.1s ease-in-out infinite}
+@keyframes slide{0%{left:-35%}100%{left:100%}}
 
-        .page-card {
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, filter 0.3s ease;
-            transform-style: preserve-3d;
-            will-change: transform;
-        }
+/* stage */
+main{flex:1;min-height:0;position:relative;display:flex}
+#stage{flex:1;overflow:auto;padding:18px 64px 28px;display:flex;justify-content:safe center;align-items:safe center}
+#spread{display:flex;gap:18px;align-items:flex-start;perspective:1600px}
+.pg{margin:0;flex:none;text-align:center}
+.sheet{position:relative;background:var(--paper);box-shadow:var(--shadow);border-radius:2px;overflow:hidden}
+.sheet img{display:block;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s}
+.sheet img.ok{opacity:1}
+.sk{position:absolute;inset:0;display:grid;place-items:center;background:repeating-linear-gradient(135deg,#eceef2 0 12px,#e4e7ec 12px 24px);color:#566}
+.sk .spin{width:26px;height:26px}
+.pg figcaption{margin-top:8px;font:600 13px Georgia,serif;color:var(--mute)}
+.spin{border:3px solid rgba(120,130,150,.35);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.turn-next .pg{transform-origin:left center;animation:tn .38s ease-out}
+.turn-prev .pg{transform-origin:right center;animation:tp .38s ease-out}
+@keyframes tn{from{opacity:0;transform:rotateY(-16deg) translateX(34px)}to{opacity:1;transform:none}}
+@keyframes tp{from{opacity:0;transform:rotateY(16deg) translateX(-34px)}to{opacity:1;transform:none}}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:84px;border:0;border-radius:8px;background:color-mix(in srgb,var(--bar) 88%,transparent);color:var(--ink);font-size:26px;box-shadow:0 2px 10px rgba(0,0,0,.2);z-index:3}
+.arrow:hover:not(:disabled){background:var(--accent);color:var(--accent-ink)}
+.arrow:disabled{opacity:.25;cursor:default}
+#prev{left:8px}#next{right:8px}
+.msg{max-width:460px;text-align:center;color:var(--mute);padding:20px}
+.msg h2{font:600 24px Georgia,serif;color:var(--ink);margin:0 0 8px}
+.msg .ex{margin-top:10px;word-break:break-all;font-size:13px}
+.msg a{color:var(--accent)}
+.err{color:#c0392b}
+#loader{position:absolute;inset:0;background:color-mix(in srgb,var(--desk) 82%,transparent);display:none;place-items:center;z-index:6}
+#loader.on{display:grid}
+#loader div{background:var(--bar);padding:20px 28px;border-radius:10px;box-shadow:var(--shadow);text-align:center}
+#loader .spin{width:38px;height:38px;margin:0 auto 10px}
 
-        .page-card.flipping-next {
-            animation: flipNext 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        .page-card.flipping-prev {
-            animation: flipPrev 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        @keyframes flipNext {
-            0% { transform: rotateY(0deg); opacity: 0.8; }
-            50% { transform: rotateY(-12deg) scale(0.97); opacity: 0.9; }
-            100% { transform: rotateY(0deg); opacity: 1; }
-        }
-
-        @keyframes flipPrev {
-            0% { transform: rotateY(0deg); opacity: 0.8; }
-            50% { transform: rotateY(12deg) scale(0.97); opacity: 0.9; }
-            100% { transform: rotateY(0deg); opacity: 1; }
-        }
-
-        /* Loading Spinner Ripple */
-        .lds-ripple {
-            display: inline-block;
-            position: relative;
-            width: 72px;
-            height: 72px;
-        }
-        .lds-ripple div {
-            position: absolute;
-            border: 3px solid #38bdf8;
-            opacity: 1;
-            border-radius: 50%;
-            animation: lds-ripple 1.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-        }
-        .lds-ripple div:nth-child(2) {
-            animation-delay: -0.6s;
-        }
-        @keyframes lds-ripple {
-            0% { top: 32px; left: 32px; width: 0; height: 0; opacity: 0; }
-            4.9% { top: 32px; left: 32px; width: 0; height: 0; opacity: 0; }
-            5% { top: 32px; left: 32px; width: 0; height: 0; opacity: 1; }
-            100% { top: 0px; left: 0px; width: 64px; height: 64px; opacity: 0; }
-        }
-
-        /* Modern styled scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-
-        /* Prevent unwanted highlighting on mobile gestures */
-        .no-select {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-    </style>
+/* footer */
+footer{background:var(--bar);border-top:1px solid var(--line);max-height:34vh;overflow:auto;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+footer>details>summary{cursor:pointer;font-weight:600;padding:2px 0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px;margin-top:8px}
+.cols h3{font:600 15px Georgia,serif;margin:6px 0}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px}
+dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
+footer a{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);border-radius:99px;padding:1px 9px;font-size:12.5px;text-decoration:none}
+.small{font-size:12.5px;color:var(--mute)}
+@media (max-width:640px){#stage{padding:12px 8px 20px}.arrow{width:34px;height:64px;opacity:.85}.brand{width:100%}}
+@media (prefers-reduced-motion:reduce){.turn-next .pg,.turn-prev .pg{animation:none}#prog.on::after{animation-duration:2.4s}}
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col overflow-hidden no-select">
-
-    <!-- Header Navigation Bar -->
-    <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 md:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 z-30 shadow-lg">
-        <!-- Logo & Active Document Title -->
-        <div class="flex items-center space-x-3 min-w-0">
-            <div class="bg-gradient-to-tr from-brand-700 to-brand-500 text-white p-2 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
-                <i class="fa-solid fa-book-open text-base md:text-lg"></i>
-            </div>
-            <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                    <h1 class="font-bold text-sm md:text-base leading-tight text-white truncate tracking-tight">
-                        Commons Reader
-                    </h1>
-                    <span class="text-[10px] uppercase font-semibold tracking-wider bg-brand-500/10 text-brand-400 border border-brand-500/20 px-2 py-0.5 rounded-full hidden sm:inline-block">DjVu / PDF</span>
-                </div>
-                <p id="doc-title" class="text-xs text-slate-400 truncate max-w-[150px] sm:max-w-[260px] md:max-w-[380px] font-mono">No file loaded</p>
-            </div>
-        </div>
-
-        <!-- URL Input & Loader Form -->
-        <div class="flex-1 order-last md:order-none min-w-[280px] w-full md:w-auto md:max-w-md">
-            <form id="url-form" class="relative flex items-center">
-                <i class="fa-solid fa-link absolute left-3 text-slate-500 text-xs pointer-events-none"></i>
-                <input type="text" id="wiki-url-input" 
-                    placeholder="Enter file or Wikimedia URL (e.g. File:Sample.djvu)" 
-                    class="w-full bg-slate-950/80 border border-slate-700/80 text-slate-200 text-xs rounded-xl pl-8 pr-20 py-2 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-500">
-                <button type="submit" class="absolute right-1 bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1 rounded-lg font-medium transition-all shadow-md active:scale-95 flex items-center gap-1">
-                    <span>Load</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                </button>
-            </form>
-        </div>
-
-        <!-- Right Quick Actions -->
-        <div class="flex items-center space-x-1 shrink-0">
-            <button id="btn-info" title="File Info" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
-                <i class="fa-solid fa-circle-info text-base"></i>
-            </button>
-            <button id="btn-fullscreen" title="Toggle Fullscreen" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
-                <i class="fa-solid fa-expand text-base"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Toolbar Controls Bar -->
-    <div class="bg-slate-900/80 border-b border-slate-800/80 px-3 md:px-5 py-1.5 flex items-center justify-between gap-2 text-xs z-20 overflow-x-auto no-scrollbar">
-        
-        <!-- View Mode Switches (1, 2, 3 pages layout) -->
-        <div class="flex items-center bg-slate-950/90 p-1 rounded-xl border border-slate-800 shrink-0">
-            <span class="text-slate-400 text-[10px] font-semibold uppercase px-2 hidden lg:inline-block tracking-wider">Layout:</span>
-            <button id="btn-layout-1" class="layout-btn px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 transition font-medium flex items-center gap-1.5 text-xs" data-pages="1">
-                <i class="fa-solid fa-file text-xs"></i> <span class="hidden sm:inline">1 Page</span><span class="sm:hidden">1P</span>
-            </button>
-            <button id="btn-layout-2" class="layout-btn px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 transition font-medium flex items-center gap-1.5 text-xs" data-pages="2">
-                <i class="fa-solid fa-book-open text-xs"></i> <span class="hidden sm:inline">2 Spread</span><span class="sm:hidden">2P</span>
-            </button>
-            <button id="btn-layout-3" class="layout-btn px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-800 transition font-medium flex items-center gap-1.5 text-xs" data-pages="3">
-                <i class="fa-solid fa-table-columns text-xs"></i> <span class="hidden sm:inline">3 Grid</span><span class="sm:hidden">3P</span>
-            </button>
-        </div>
-
-        <!-- Page Navigation Controls -->
-        <div class="flex items-center space-x-1 shrink-0">
-            <button id="btn-first-page" title="First Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
-                <i class="fa-solid fa-angles-left text-xs"></i>
-            </button>
-            <button id="btn-prev-page" title="Previous Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
-                <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            
-            <div class="flex items-center space-x-1.5 bg-slate-950/90 px-2.5 py-1 rounded-xl border border-slate-800">
-                <span class="text-slate-400 text-[11px] font-medium hidden sm:inline">Page</span>
-                <input type="number" id="page-number-input" min="1" value="1" class="w-12 bg-slate-800 text-center text-white text-xs rounded-md border border-slate-700 focus:outline-none focus:border-brand-500 py-0.5 font-mono">
-                <span id="total-pages-display" class="text-slate-400 text-[11px] font-mono">/ --</span>
-            </div>
-
-            <button id="btn-next-page" title="Next Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
-                <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
-            <button id="btn-last-page" title="Last Page" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400">
-                <i class="fa-solid fa-angles-right text-xs"></i>
-            </button>
-        </div>
-
-        <!-- Zoom Controls -->
-        <div class="flex items-center bg-slate-950/90 p-1 rounded-xl border border-slate-800 shrink-0">
-            <button id="btn-zoom-out" title="Zoom Out" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                <i class="fa-solid fa-minus text-xs"></i>
-            </button>
-            <span id="zoom-level-text" class="text-slate-300 w-12 text-center text-[11px] font-mono">100%</span>
-            <button id="btn-zoom-in" title="Zoom In" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition">
-                <i class="fa-solid fa-plus text-xs"></i>
-            </button>
-            <button id="btn-zoom-reset" title="Reset Zoom" class="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition text-[10px] ml-0.5">
-                <i class="fa-solid fa-rotate-left"></i>
-            </button>
-        </div>
+<body>
+<header>
+  <span class="brand">Commons Reader</span>
+  <form class="load" id="loadForm">
+    <input id="url" type="text" placeholder="Paste a Wikimedia Commons file link or File: name" aria-label="Commons file URL" autocomplete="off" spellcheck="false">
+    <button class="btn primary" type="submit">Load file</button>
+  </form>
+  <div class="grp pn" title="Go to page">
+    <input id="pageIn" type="number" min="1" value="1" aria-label="Page number" disabled>
+    <span id="pageOf">/ –</span>
+  </div>
+  <div class="seg" role="group" aria-label="Pages on screen" id="layoutSeg">
+    <button data-l="1" aria-pressed="false" title="1 page">1 page</button>
+    <button data-l="2" aria-pressed="true" title="2 pages">2 pages</button>
+    <button data-l="3" aria-pressed="false" title="3 pages">3 pages</button>
+  </div>
+  <div class="grp">
+    <button class="btn" id="zOut" aria-label="Zoom out">−</button>
+    <span class="zm" id="zLbl">100%</span>
+    <button class="btn" id="zIn" aria-label="Zoom in">+</button>
+    <button class="btn" id="zFit" title="Fit page to screen">Fit</button>
+    <button class="btn" id="theme" aria-label="Toggle dark mode" title="Light / dark">◐</button>
+  </div>
+</header>
+<div id="prog"></div>
+<main>
+  <button class="arrow" id="prev" aria-label="Previous pages" disabled>‹</button>
+  <div id="stage" tabindex="0" aria-live="polite">
+    <div class="msg" id="empty">
+      <h2>Read Commons books on a desk</h2>
+      Paste the link of a PDF or DjVu file from Wikimedia Commons above, then choose how many pages to see at once.
+      <div class="ex"><a href="#" id="sample">Try: Kulastreeyum Chanthapennum Undayathengane.djvu</a></div>
     </div>
-
-    <!-- Main Viewport Area -->
-    <main id="main-viewport" class="relative flex-1 bg-slate-950 overflow-hidden flex items-center justify-center p-2 sm:p-4 select-none">
-        
-        <!-- Floating Navigation Hotspots / Side Arrows -->
-        <button id="arrow-prev" aria-label="Previous Page" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-slate-900/90 hover:bg-brand-600 text-slate-300 hover:text-white w-10 h-16 rounded-2xl flex items-center justify-center border border-slate-700/80 transition-all shadow-xl backdrop-blur disabled:opacity-0 disabled:pointer-events-none">
-            <i class="fa-solid fa-chevron-left text-lg"></i>
-        </button>
-        <button id="arrow-next" aria-label="Next Page" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-slate-900/90 hover:bg-brand-600 text-slate-300 hover:text-white w-10 h-16 rounded-2xl flex items-center justify-center border border-slate-700/80 transition-all shadow-xl backdrop-blur disabled:opacity-0 disabled:pointer-events-none">
-            <i class="fa-solid fa-chevron-right text-lg"></i>
-        </button>
-
-        <!-- Dynamic Book Stage Container -->
-        <div id="reader-stage" class="w-full h-full overflow-auto flex items-center justify-center p-2">
-            <div id="pages-wrapper" class="page-container flex flex-col md:flex-row items-center justify-center gap-4 transition-transform duration-200 max-w-full">
-                <!-- Page Cards dynamically injected here -->
-            </div>
-        </div>
-
-        <!-- Animated Loading Overlay -->
-        <div id="loading-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center z-40 transition-opacity duration-300">
-            <div class="lds-ripple"><div></div><div></div></div>
-            <p id="loading-status" class="mt-4 text-slate-200 font-semibold text-sm">Initializing Reader...</p>
-            <p id="loading-subtext" class="text-xs text-slate-400 mt-1">Fetching metadata from Wikimedia Commons API</p>
-        </div>
-
-        <!-- File Metadata Info Modal -->
-        <div id="info-modal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-            <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-                    <h3 class="font-bold text-base text-white flex items-center gap-2">
-                        <i class="fa-solid fa-circle-info text-brand-400"></i> Document Information
-                    </h3>
-                    <button id="btn-close-info" class="text-slate-400 hover:text-white p-1 text-lg rounded-lg hover:bg-slate-800 transition"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="info-content" class="space-y-3 text-xs text-slate-300 max-h-[60vh] overflow-y-auto pr-1">
-                    <!-- Dynamic Info Inject -->
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Bottom Status Bar -->
-    <footer class="bg-slate-900/90 border-t border-slate-800 px-4 py-1.5 text-[11px] text-slate-400 flex items-center justify-between z-10">
-        <div class="flex items-center gap-2">
-            <span id="footer-page-indicator" class="font-medium text-slate-300">Page -- / --</span>
-        </div>
-        <div class="hidden sm:flex items-center gap-3 text-slate-500">
-            <span><kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">←</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">→</kbd> Navigate</span>
-            <span><kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">+</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono">-</kbd> Zoom</span>
-        </div>
-    </footer>
-
-    <!-- Reader Application Logic Script -->
-    <script>
-        /**
-         * Wikimedia Commons Reader Application Logic
-         */
-        class CommonsReader {
-            constructor() {
-                // Application State
-                this.fileName = '';
-                this.totalPages = 0;
-                this.currentPage = 1;
-                this.pagesPerView = 1;
-                this.zoomLevel = 1.0;
-                this.pageWidth = 1000; // Base rendering quality resolution
-                this.fileInfo = {};
-                this.isLoading = false;
-
-                // Touch swipe tracking variables
-                this.touchStartX = 0;
-                this.touchEndX = 0;
-
-                // DOM Reference Elements
-                this.elements = {
-                    viewport: document.getElementById('main-viewport'),
-                    stage: document.getElementById('reader-stage'),
-                    wrapper: document.getElementById('pages-wrapper'),
-                    loadingOverlay: document.getElementById('loading-overlay'),
-                    loadingStatus: document.getElementById('loading-status'),
-                    loadingSubtext: document.getElementById('loading-subtext'),
-                    docTitle: document.getElementById('doc-title'),
-                    urlInput: document.getElementById('wiki-url-input'),
-                    urlForm: document.getElementById('url-form'),
-                    pageInput: document.getElementById('page-number-input'),
-                    totalPagesDisplay: document.getElementById('total-pages-display'),
-                    zoomDisplay: document.getElementById('zoom-level-text'),
-                    infoModal: document.getElementById('info-modal'),
-                    infoContent: document.getElementById('info-content'),
-                    footerPageIndicator: document.getElementById('footer-page-indicator'),
-                    btnPrev: document.getElementById('btn-prev-page'),
-                    btnNext: document.getElementById('btn-next-page'),
-                    btnFirst: document.getElementById('btn-first-page'),
-                    btnLast: document.getElementById('btn-last-page'),
-                    arrowPrev: document.getElementById('arrow-prev'),
-                    arrowNext: document.getElementById('arrow-next')
-                };
-
-                this.initEvents();
-                this.checkUrlParams();
-            }
-
-            /**
-             * Initialize event handlers and touch/keyboard listeners
-             */
-            initEvents() {
-                // Form Submit URL Loading
-                this.elements.urlForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const url = this.elements.urlInput.value.trim();
-                    if (url) this.loadFromUrl(url);
-                });
-
-                // Layout View Mode Switches
-                document.querySelectorAll('.layout-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const count = parseInt(e.currentTarget.getAttribute('data-pages'));
-                        this.setLayoutMode(count);
-                    });
-                });
-
-                // Navigation Controls
-                this.elements.btnPrev.addEventListener('click', () => this.navigatePage(-this.pagesPerView));
-                this.elements.btnNext.addEventListener('click', () => this.navigatePage(this.pagesPerView));
-                this.elements.arrowPrev.addEventListener('click', () => this.navigatePage(-this.pagesPerView));
-                this.elements.arrowNext.addEventListener('click', () => this.navigatePage(this.pagesPerView));
-                
-                this.elements.btnFirst.addEventListener('click', () => this.goToPage(1));
-                this.elements.btnLast.addEventListener('click', () => this.goToPage(this.totalPages));
-
-                this.elements.pageInput.addEventListener('change', (e) => {
-                    let page = parseInt(e.target.value);
-                    if (isNaN(page)) page = 1;
-                    this.goToPage(page);
-                });
-
-                // Zoom Controls
-                document.getElementById('btn-zoom-in').addEventListener('click', () => this.adjustZoom(0.15));
-                document.getElementById('btn-zoom-out').addEventListener('click', () => this.adjustZoom(-0.15));
-                document.getElementById('btn-zoom-reset').addEventListener('click', () => this.resetZoom());
-
-                // Fullscreen Toggle
-                document.getElementById('btn-fullscreen').addEventListener('click', () => {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(() => {});
-                    } else {
-                        if (document.exitFullscreen) document.exitFullscreen();
-                    }
-                });
-
-                // Metadata Modal
-                document.getElementById('btn-info').addEventListener('click', () => {
-                    if (this.fileName) {
-                        this.elements.infoModal.classList.remove('hidden');
-                    }
-                });
-                document.getElementById('btn-close-info').addEventListener('click', () => {
-                    this.elements.infoModal.classList.add('hidden');
-                });
-
-                // Keyboard Shortcuts
-                window.addEventListener('keydown', (e) => {
-                    if (e.target.tagName === 'INPUT') return;
-                    if (e.key === 'ArrowLeft') this.navigatePage(-this.pagesPerView);
-                    if (e.key === 'ArrowRight') this.navigatePage(this.pagesPerView);
-                    if (e.key === '+' || e.key === '=') this.adjustZoom(0.15);
-                    if (e.key === '-') this.adjustZoom(-0.15);
-                    if (e.key === '0') this.resetZoom();
-                });
-
-                // Touch / Swipe Navigation Support
-                this.elements.viewport.addEventListener('touchstart', (e) => {
-                    this.touchStartX = e.changedTouches[0].screenX;
-                }, { passive: true });
-
-                this.elements.viewport.addEventListener('touchend', (e) => {
-                    this.touchEndX = e.changedTouches[0].screenX;
-                    this.handleSwipeGesture();
-                }, { passive: true });
-            }
-
-            handleSwipeGesture() {
-                const swipeThreshold = 50; // threshold in pixels
-                const diff = this.touchStartX - this.touchEndX;
-                if (Math.abs(diff) > swipeThreshold) {
-                    if (diff > 0) {
-                        // Swiped left -> Next page
-                        this.navigatePage(this.pagesPerView);
-                    } else {
-                        // Swiped right -> Previous page
-                        this.navigatePage(-this.pagesPerView);
-                    }
-                }
-            }
-
-            /**
-             * Auto load file if specified in URL query parameter
-             */
-            checkUrlParams() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const fileParam = urlParams.get('file') || urlParams.get('url');
-
-                if (fileParam) {
-                    this.elements.urlInput.value = fileParam;
-                    this.loadFromUrl(fileParam);
-                } else {
-                    // Default file load sample
-                    const defaultUrl = 'https://commons.wikimedia.org/wiki/File:Kulastreeyum_Chanthapennum_Undayathengane.djvu';
-                    this.elements.urlInput.value = defaultUrl;
-                    this.loadFromUrl(defaultUrl);
-                }
-            }
-
-            /**
-             * Parse Wikimedia File Name from input
-             */
-            extractFileName(input) {
-                let clean = input.trim();
-                try { clean = decodeURIComponent(clean); } catch(e){}
-
-                if (clean.includes('wikimedia.org/wiki/')) {
-                    clean = clean.split('wikimedia.org/wiki/')[1];
-                }
-                
-                clean = clean.split('?')[0].split('#')[0];
-
-                if (!clean.startsWith('File:')) {
-                    clean = 'File:' + clean;
-                }
-
-                return clean;
-            }
-
-            /**
-             * Main document fetch & loader
-             */
-            async loadFromUrl(url) {
-                const fileName = this.extractFileName(url);
-                if (!fileName) return;
-
-                this.showLoading(true, 'Connecting to Wikimedia Commons...', 'Fetching document structure');
-                this.fileName = fileName;
-                this.elements.docTitle.innerText = fileName.replace('File:', '').replaceAll('_', ' ');
-
-                try {
-                    const apiUrl = `https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileName)}&prop=imageinfo&iiprop=size|mime|url|extmetadata&format=json&origin=*`;
-                    
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-                    
-                    const pages = data.query?.pages;
-                    const pageId = Object.keys(pages)[0];
-
-                    if (pageId === '-1' || !pages[pageId]) {
-                        throw new Error('File not found on Wikimedia Commons.');
-                    }
-
-                    const imageInfo = pages[pageId].imageinfo?.[0];
-                    if (!imageInfo) {
-                        throw new Error('Unable to retrieve image details.');
-                    }
-
-                    this.fileInfo = {
-                        mime: imageInfo.mime,
-                        size: (imageInfo.size / (1024 * 1024)).toFixed(2) + ' MB',
-                        width: imageInfo.width,
-                        height: imageInfo.height,
-                        url: imageInfo.url,
-                        descriptionUrl: imageInfo.descriptionurl,
-                        extmetadata: imageInfo.extmetadata || {}
-                    };
-
-                    this.totalPages = imageInfo.page_count || 1;
-                    this.currentPage = 1;
-
-                    this.elements.totalPagesDisplay.innerText = `/ ${this.totalPages}`;
-                    this.elements.pageInput.max = this.totalPages;
-                    this.updateInfoModal();
-
-                    this.setLayoutMode(1);
-                    await this.renderCurrentView();
-
-                    try {
-                        history.replaceState(null, '', `?file=${encodeURIComponent(fileName)}`);
-                    } catch (e) {
-                        console.warn('History state update suppressed:', e);
-                    }
-
-                } catch (error) {
-                    console.error('Error loading Commons file:', error);
-                    alert('Error loading file: ' + error.message);
-                } finally {
-                    this.showLoading(false);
-                }
-            }
-
-            /**
-             * Generate Wikimedia Commons rendered page thumbnail URL
-             */
-            getPageImageUrl(pageNumber, width = this.pageWidth) {
-                const cleanName = this.fileName.replace('File:', '');
-                return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(cleanName)}?width=${width}&page=${pageNumber}`;
-            }
-
-            /**
-             * Set layout view mode
-             */
-            setLayoutMode(count) {
-                this.pagesPerView = count;
-
-                document.querySelectorAll('.layout-btn').forEach(btn => {
-                    const btnCount = parseInt(btn.getAttribute('data-pages'));
-                    if (btnCount === count) {
-                        btn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
-                        btn.classList.remove('text-slate-300', 'hover:bg-slate-800');
-                    } else {
-                        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
-                        btn.classList.add('text-slate-300', 'hover:bg-slate-800');
-                    }
-                });
-
-                this.renderCurrentView();
-            }
-
-            /**
-             * Render active view pages into DOM
-             */
-            async renderCurrentView(direction = 'none') {
-                if (!this.fileName) return;
-
-                this.elements.wrapper.innerHTML = '';
-
-                const pagesToRender = [];
-                for (let i = 0; i < this.pagesPerView; i++) {
-                    const targetPage = this.currentPage + i;
-                    if (targetPage <= this.totalPages) {
-                        pagesToRender.push(targetPage);
-                    }
-                }
-
-                // Render page cards
-                pagesToRender.forEach(pageNum => {
-                    const card = document.createElement('div');
-                    card.className = 'page-card relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col items-center justify-between min-h-[350px] max-w-full transition-all';
-                    
-                    if (direction === 'next') card.classList.add('flipping-next');
-                    if (direction === 'prev') card.classList.add('flipping-prev');
-
-                    // Loader element
-                    const loader = document.createElement('div');
-                    loader.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-10 p-4 text-center';
-                    loader.innerHTML = `
-                        <i class="fa-solid fa-spinner fa-spin text-brand-400 text-2xl mb-3"></i>
-                        <span class="text-xs text-slate-400 font-medium">Loading Page ${pageNum}...</span>
-                    `;
-                    card.appendChild(loader);
-
-                    // Page Image
-                    const img = document.createElement('img');
-                    img.className = 'max-h-[72vh] md:max-h-[78vh] w-auto max-w-full object-contain block transition-opacity duration-300 opacity-0';
-                    img.alt = `Page ${pageNum}`;
-                    img.src = this.getPageImageUrl(pageNum);
-
-                    img.onload = () => {
-                        loader.remove();
-                        img.classList.remove('opacity-0');
-                    };
-
-                    img.onerror = () => {
-                        loader.innerHTML = `
-                            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-2xl mb-2"></i>
-                            <span class="text-xs text-slate-400">Failed to render Page ${pageNum}</span>
-                        `;
-                    };
-
-                    // Bottom Tag
-                    const pageTag = document.createElement('div');
-                    pageTag.className = 'w-full text-center py-1.5 bg-slate-950/90 text-slate-400 text-[11px] border-t border-slate-800 font-mono';
-                    pageTag.innerText = `Page ${pageNum} of ${this.totalPages}`;
-
-                    card.appendChild(img);
-                    card.appendChild(pageTag);
-                    this.elements.wrapper.appendChild(card);
-                });
-
-                // Sync controls & footer
-                this.elements.pageInput.value = this.currentPage;
-                const endPage = Math.min(this.currentPage + this.pagesPerView - 1, this.totalPages);
-                const pageRangeStr = this.pagesPerView > 1 && endPage > this.currentPage 
-                    ? `Pages ${this.currentPage}-${endPage} / ${this.totalPages}`
-                    : `Page ${this.currentPage} / ${this.totalPages}`;
-                this.elements.footerPageIndicator.innerText = pageRangeStr;
-
-                this.updateNavButtons();
-            }
-
-            /**
-             * Navigation logic
-             */
-            navigatePage(offset) {
-                const newPage = this.currentPage + offset;
-                const direction = offset > 0 ? 'next' : 'prev';
-                this.goToPage(newPage, direction);
-            }
-
-            goToPage(pageNumber, direction = 'none') {
-                if (pageNumber < 1) pageNumber = 1;
-                if (pageNumber > this.totalPages) pageNumber = this.totalPages;
-
-                this.currentPage = pageNumber;
-                this.renderCurrentView(direction);
-            }
-
-            /**
-             * Zoom Adjustments
-             */
-            adjustZoom(delta) {
-                this.zoomLevel = Math.max(0.5, Math.min(2.5, this.zoomLevel + delta));
-                this.applyZoom();
-            }
-
-            resetZoom() {
-                this.zoomLevel = 1.0;
-                this.applyZoom();
-            }
-
-            applyZoom() {
-                this.elements.wrapper.style.transform = `scale(${this.zoomLevel})`;
-                this.elements.zoomDisplay.innerText = `${Math.round(this.zoomLevel * 100)}%`;
-            }
-
-            /**
-             * Update navigation UI buttons status
-             */
-            updateNavButtons() {
-                const isFirst = this.currentPage <= 1;
-                const isLast = (this.currentPage + this.pagesPerView - 1) >= this.totalPages;
-
-                this.elements.btnPrev.disabled = isFirst;
-                this.elements.arrowPrev.disabled = isFirst;
-                this.elements.btnFirst.disabled = isFirst;
-
-                this.elements.btnNext.disabled = isLast;
-                this.elements.arrowNext.disabled = isLast;
-                this.elements.btnLast.disabled = isLast;
-            }
-
-            /**
-             * Populate Metadata Modal
-             */
-            updateInfoModal() {
-                const meta = this.fileInfo.extmetadata || {};
-                const getVal = (key) => meta[key] ? meta[key].value : 'N/A';
-
-                this.elements.infoContent.innerHTML = `
-                    <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2 font-mono text-[11px]">
-                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">File:</span> <span class="font-medium text-white truncate">${this.fileName.replace('File:', '')}</span></div>
-                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Total Pages:</span> <span class="font-medium text-white">${this.totalPages}</span></div>
-                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">MIME Type:</span> <span class="font-medium text-white">${this.fileInfo.mime || 'N/A'}</span></div>
-                        <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">File Size:</span> <span class="font-medium text-white">${this.fileInfo.size}</span></div>
-                    </div>
-                    <div class="space-y-2.5 pt-2">
-                        <div><strong class="text-slate-300 block">Title / Object Name:</strong> <p class="text-slate-400 mt-0.5 text-xs">${getVal('ObjectName')}</p></div>
-                        <div><strong class="text-slate-300 block">License:</strong> <p class="text-slate-400 mt-0.5 text-xs">${getVal('LicenseShortName')}</p></div>
-                        <div><strong class="text-slate-300 block">Artist / Author:</strong> <p class="text-slate-400 mt-0.5 text-xs">${getVal('Artist') || getVal('Categories')}</p></div>
-                    </div>
-                    <div class="pt-3 border-t border-slate-800">
-                        <a href="${this.fileInfo.descriptionUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 text-xs font-medium">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open on Wikimedia Commons
-                        </a>
-                    </div>
-                `;
-            }
-
-            showLoading(show, title = 'Loading...', subtext = '') {
-                this.isLoading = show;
-                if (show) {
-                    this.elements.loadingStatus.innerText = title;
-                    this.elements.loadingSubtext.innerText = subtext;
-                    this.elements.loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
-                } else {
-                    this.elements.loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-                }
-            }
-        }
-
-        // Initialize application on load
-        window.addEventListener('DOMContentLoaded', () => {
-            window.readerApp = new CommonsReader();
-        });
-    </script>
+    <div id="spread" hidden></div>
+  </div>
+  <button class="arrow" id="next" aria-label="Next pages" disabled>›</button>
+  <div id="loader"><div><div class="spin"></div><b id="loadTxt">Loading…</b><div class="small" id="loadSub">Large scans can take a little while</div></div></div>
+</main>
+<footer>
+  <details open>
+    <summary id="fSum">Document information, licence and Wikidata</summary>
+    <div class="cols" id="info"><span class="small">Load a file to see its details here.</span></div>
+  </details>
+</footer>
+
+<script>
+const COMMONS='https://commons.wikimedia.org/w/api.php', WD='https://www.wikidata.org/w/api.php';
+const $=s=>document.querySelector(s);
+const S={name:'',total:0,cur:1,layout:2,zoom:1,ratio:1.41,token:0};
+const thumbCache=new Map();
+const SAMPLE='https://commons.wikimedia.org/wiki/File:Kulastreeyum_Chanthapennum_Undayathengane.djvu';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plain=h=>new DOMParser().parseFromString(h||'','text/html').body.textContent.trim();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+async function api(base,p){
+  const u=new URL(base);
+  Object.entries({format:'json',origin:'*',...p}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u); if(!r.ok) throw new Error('Network error '+r.status);
+  return r.json();
+}
+function parseName(input){
+  let s=(input||'').trim(); if(!s) return '';
+  try{
+    const u=new URL(s);
+    if(u.searchParams.get('title')) s=u.searchParams.get('title');
+    else s=decodeURIComponent(u.pathname.replace(/^\/wiki\//,'').replace(/^.*\/Special:(FilePath|Redirect\/file)\//i,''));
+    if(u.hostname==='upload.wikimedia.org'){const p=u.pathname.split('/').filter(Boolean);s=decodeURIComponent(p[p[0]==='wikipedia'&&p[2]==='thumb'?5:4]||s);}
+  }catch(e){}
+  return s.replace(/^(File|Image):/i,'').replace(/_/g,' ').trim();
+}
+function busy(on,t,sub){
+  $('#loader').classList.toggle('on',on); $('#prog').classList.toggle('on',on);
+  if(t) $('#loadTxt').textContent=t; if(sub!==undefined) $('#loadSub').textContent=sub;
+}
+function showMsg(html,isErr){
+  $('#spread').hidden=true; const e=$('#empty'); e.hidden=false;
+  e.innerHTML=html; e.classList.toggle('err',!!isErr);
+}
+
+async function loadFile(input,startPage){
+  const name=parseName(input);
+  if(!name){showMsg('<h2>No file given</h2>Paste a link such as <div class="ex">'+esc(SAMPLE)+'</div>',true);return;}
+  const my=++S.token;
+  busy(true,'Fetching file details…','Contacting Wikimedia Commons');
+  try{
+    const d=await api(COMMONS,{action:'query',titles:'File:'+name,prop:'imageinfo|categories|info',inprop:'url',cllimit:'12',
+      iiprop:'url|size|mime|extmetadata|user|timestamp|sha1|mediatype'});
+    if(my!==S.token) return;
+    const pg=Object.values(d.query.pages)[0];
+    if(!pg||pg.missing!==undefined||!pg.imageinfo) throw new Error('File not found on Commons: '+name);
+    const ii=pg.imageinfo[0];
+    if(!/pdf|djvu/i.test(ii.mime)) throw new Error('This reader opens PDF and DjVu files. This file is '+ii.mime+'.');
+    Object.assign(S,{name,total:ii.pagecount||1,cur:clamp(startPage||1,1,ii.pagecount||1),ratio:(ii.height&&ii.width)?ii.height/ii.width:1.41,pageId:pg.pageid});
+    thumbCache.clear();
+    $('#url').value='https://commons.wikimedia.org/wiki/File:'+name.replace(/ /g,'_');
+    document.title=name+' · Commons Reader';
+    const q=new URL(location.href); q.searchParams.set('file',name.replace(/ /g,'_')); history.replaceState(null,'',q);
+    $('#empty').hidden=true; $('#spread').hidden=false;
+    $('#pageIn').disabled=false; $('#pageIn').max=S.total;
+    busy(true,'Preparing pages…','Rendering page 1 of '+S.total);
+    renderInfo(pg,ii);
+    await render(0);
+    busy(false);
+    loadWikidata(pg.pageid,my);
+  }catch(e){
+    if(my!==S.token) return;
+    busy(false); showMsg('<h2>Could not open the file</h2>'+esc(e.message)+'<div class="ex">Check the link and try again, or open another file.</div>',true);
+  }
+}
+
+function geometry(){
+  const st=$('#stage'), eff=effLayout(), gap=18;
+  const aw=st.clientWidth-(window.innerWidth<=640?16:128), ah=st.clientHeight-70;
+  const w=Math.min((aw-gap*(eff-1))/eff, ah/S.ratio);
+  const wd=Math.max(120,Math.round(w*S.zoom));
+  return {eff,w:wd,h:Math.round(wd*S.ratio)};
+}
+const effLayout=()=>window.innerWidth<=560?1:S.layout;
+function thumb(n,w){
+  const key=n+'@'+w;
+  if(!thumbCache.has(key)){
+    thumbCache.set(key,api(COMMONS,{action:'query',titles:'File:'+S.name,prop:'imageinfo',iiprop:'url',iiurlwidth:w,iiurlparam:'page'+n+'-'+w+'px'})
+      .then(d=>{const i=Object.values(d.query.pages)[0].imageinfo?.[0];if(!i) throw new Error('no page');return i.thumburl;})
+      .catch(e=>{thumbCache.delete(key);throw e;}));
+  }
+  return thumbCache.get(key);
+}
+const reqW=w=>clamp(Math.ceil(w*Math.min(window.devicePixelRatio||1,2)/100)*100,300,2400);
+
+async function render(dir){
+  const g=geometry(), sp=$('#spread'), w=reqW(g.w), pages=[];
+  for(let n=S.cur;n<S.cur+g.eff&&n<=S.total;n++) pages.push(n);
+  sp.className=''; void sp.offsetWidth;
+  sp.className=dir>0?'turn-next':dir<0?'turn-prev':'';
+  sp.innerHTML=pages.map(n=>`<figure class="pg" style="width:${g.w}px"><div class="sheet" style="width:${g.w}px;height:${g.h}px" data-n="${n}"><div class="sk"><div class="spin"></div></div><img alt="Page ${n}"></div><figcaption>Page ${n}</figcaption></figure>`).join('');
+  updateUI(g);
+  const tok=S.token, jobs=pages.map(n=>{
+    const sheet=sp.querySelector(`.sheet[data-n="${n}"]`), img=sheet.querySelector('img');
+    return thumb(n,w).then(url=>new Promise((res,rej)=>{img.onload=()=>{img.classList.add('ok');sheet.querySelector('.sk')?.remove();res()};img.onerror=()=>rej(new Error('image'));img.src=url;}))
+      .catch(()=>{ if(tok!==S.token) return; const sk=sheet.querySelector('.sk'); if(sk) sk.innerHTML='<div style="text-align:center;padding:10px"><div>Page did not load</div><button class="btn" style="margin-top:8px">Retry</button></div>',sk.querySelector('button').onclick=()=>render(0);});
+  });
+  await Promise.all(jobs);
+  // preload next spread
+  for(let n=S.cur+g.eff;n<S.cur+g.eff*2&&n<=S.total;n++) thumb(n,w).then(u=>{new Image().src=u}).catch(()=>{});
+}
+function updateUI(g){
+  g=g||geometry();
+  const last=Math.min(S.total,S.cur+g.eff-1);
+  $('#pageIn').value=S.cur; $('#pageOf').textContent=(last>S.cur?'– '+last+' ':'')+'/ '+S.total;
+  $('#prev').disabled=S.cur<=1; $('#next').disabled=S.cur+g.eff>S.total;
+  $('#zLbl').textContent=Math.round(S.zoom*100)+'%';
+  document.querySelectorAll('#layoutSeg button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.l===S.layout)));
+}
+function go(dir){
+  if(!S.total) return; const eff=effLayout();
+  const n=clamp(S.cur+dir*eff,1,S.total); if(n===S.cur) return;
+  S.cur=n; render(dir);
+}
+function jump(n){ if(!S.total) return; n=clamp(Math.round(n)||1,1,S.total); const d=n-S.cur; S.cur=n; render(d>0?1:d<0?-1:0); }
+function setZoom(z){ if(!S.total) return; S.zoom=clamp(Math.round(z*100)/100,.4,3); render(0); }
+
+/* info footer */
+function renderInfo(pg,ii){
+  const m=ii.extmetadata||{}, v=k=>plain(m[k]?.value);
+  const cats=(pg.categories||[]).map(c=>c.title.replace(/^Category:/,''));
+  const lic=v('LicenseShortName')||v('UsageTerms')||'Not stated';
+  const licLink=m.LicenseUrl?.value?`<a href="${esc(m.LicenseUrl.value)}" target="_blank" rel="noopener">${esc(lic)}</a>`:esc(lic);
+  const mb=(ii.size/1048576).toFixed(1);
+  const row=(a,b)=>b?`<dt>${a}</dt><dd>${b}</dd>`:'';
+  const page=pg.fullurl||('https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(S.name));
+  $('#fSum').textContent=S.name;
+  $('#info').innerHTML=`
+  <section><h3>Document</h3><dl>
+    ${row('Title',esc(v('ObjectName')||S.name))}
+    ${row('Description',esc(v('ImageDescription')).slice(0,400))}
+    ${row('Author',esc(v('Artist')))}
+    ${row('Date',esc(v('DateTimeOriginal')||v('DateTime')))}
+    ${row('Source',esc(v('Credit')))}
+    ${row('Format',esc(ii.mime)+' · '+S.total+' pages · '+mb+' MB')}
+    ${row('Uploader',`<a href="https://commons.wikimedia.org/wiki/User:${encodeURIComponent(ii.user)}" target="_blank" rel="noopener">${esc(ii.user)}</a> on ${esc((ii.timestamp||'').slice(0,10))}`)}
+  </dl></section>
+  <section><h3>Licence</h3><dl>
+    ${row('Licence',licLink)}
+    ${row('Copyright status',esc(v('Copyrighted')==='True'?'Copyrighted':v('Copyrighted')==='False'?'Public domain':v('Copyrighted')))}
+    ${row('Attribution',esc(v('Attribution')||(v('AttributionRequired')==='true'?'Required':'')))}
+    ${row('Restrictions',esc(v('Restrictions')))}
+    ${row('Categories',cats.length?`<span class="chips">${cats.map(c=>`<a class="chip" target="_blank" rel="noopener" href="https://commons.wikimedia.org/wiki/Category:${encodeURIComponent(c.replace(/ /g,'_'))}">${esc(c)}</a>`).join('')}</span>`:'')}
+    ${row('Links',`<a href="${esc(page)}" target="_blank" rel="noopener">Commons page</a> · <a href="${esc(ii.url)}" target="_blank" rel="noopener">Original file</a> · <a href="${esc(page)}?action=history" target="_blank" rel="noopener">History</a>`)}
+  </dl></section>
+  <section><h3>Wikidata &amp; structured data</h3><div id="wd" class="small">Looking up structured data…</div></section>`;
+}
+const PROPS=['P180','P921','P170','P31','P407','P136','P195','P577','P275','P6216','P7482','P1433'];
+async function loadWikidata(pageId,my){
+  const box=()=>my===S.token&&$('#wd');
+  try{
+    const d=await api(COMMONS,{action:'wbgetentities',ids:'M'+pageId,props:'claims'});
+    const claims=d.entities?.['M'+pageId]?.statements||d.entities?.['M'+pageId]?.claims||{};
+    const props=PROPS.filter(p=>claims[p]);
+    if(!props.length){ if(box()) box().innerHTML='No structured data on this file yet. <a href="https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(S.name.replace(/ /g,'_'))+'" target="_blank" rel="noopener">Add it on Commons</a>.'; return; }
+    const ids=new Set(props);
+    const val=s=>{const dv=s.mainsnak?.datavalue; if(!dv) return null;
+      if(dv.type==='wikibase-entityid') return {q:dv.value.id};
+      if(dv.type==='string') return {t:dv.value};
+      if(dv.type==='monolingualtext') return {t:dv.value.text};
+      if(dv.type==='time') return {t:dv.value.time.replace(/^\+/,'').slice(0,10)};
+      return null;};
+    props.forEach(p=>claims[p].forEach(s=>{const x=val(s);if(x?.q)ids.add(x.q);}));
+    const arr=[...ids].slice(0,50);
+    const w=await api(WD,{action:'wbgetentities',ids:arr.join('|'),props:'labels',languages:'ml|en',languagefallback:'1'});
+    const L=id=>{const e=w.entities?.[id];const l=e?.labels;return l?(l.ml||l.en||Object.values(l)[0])?.value:id;};
+    const rows=props.map(p=>{
+      const items=claims[p].map(val).filter(Boolean).slice(0,8).map(x=>x.q
+        ?`<a class="chip" target="_blank" rel="noopener" href="https://www.wikidata.org/wiki/${x.q}">${esc(L(x.q))}</a>`:`<span>${esc(x.t)}</span>`).join(' ');
+      return `<dt><a href="https://www.wikidata.org/wiki/Property:${p}" target="_blank" rel="noopener">${esc(L(p))}</a></dt><dd class="chips">${items}</dd>`;}).join('');
+    if(box()) box().innerHTML='<dl>'+rows+'</dl>';
+  }catch(e){ if(box()) box().textContent='Wikidata details could not be loaded right now.'; }
+}
+
+/* events */
+$('#loadForm').addEventListener('submit',e=>{e.preventDefault();loadFile($('#url').value);});
+$('#sample').addEventListener('click',e=>{e.preventDefault();$('#url').value=SAMPLE;loadFile(SAMPLE);});
+$('#prev').onclick=()=>go(-1); $('#next').onclick=()=>go(1);
+$('#zIn').onclick=()=>setZoom(S.zoom+.15); $('#zOut').onclick=()=>setZoom(S.zoom-.15); $('#zFit').onclick=()=>setZoom(1);
+$('#pageIn').addEventListener('change',e=>jump(+e.target.value));
+$('#layoutSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.layout=+b.dataset.l;updateUI();if(S.total)render(0);});
+$('#theme').onclick=()=>{const r=document.documentElement,dark=getComputedStyle(r).colorScheme==='dark';r.dataset.theme=dark?'light':'dark';};
+document.addEventListener('keydown',e=>{
+  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown') go(1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp') go(-1);
+  else if(e.key==='+'||e.key==='=') setZoom(S.zoom+.15);
+  else if(e.key==='-') setZoom(S.zoom-.15);
+  else if(e.key==='0') setZoom(1);
+  else if(e.key==='Home') jump(1); else if(e.key==='End') jump(S.total);
+  else if('123'.includes(e.key)&&e.key){S.layout=+e.key;updateUI();if(S.total)render(0);}
+});
+let rt; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.total)render(0);},180);});
+let tx=null; $('#stage').addEventListener('touchstart',e=>{tx=e.touches.length===1?e.touches[0].clientX:null;},{passive:true});
+$('#stage').addEventListener('touchend',e=>{if(tx===null||S.zoom>1)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>70)go(dx<0?1:-1);tx=null;});
+
+/* auto-load: ?file=File_name.djvu (or a full Commons URL), optional &page=12 */
+(function(){
+  const q=new URLSearchParams(location.search), f=q.get('file')||q.get('url');
+  if(f){ $('#url').value=f; loadFile(f,+q.get('page')||1); }
+})();
+</script>
 </body>
 </html>
