@@ -97,7 +97,7 @@ footer a{color:var(--accent)}
 <body>
 <header>
   <span class="brand">Commons Reader</span>
-  <nav class="tabs" aria-label="Site"><a href="../">Gallery</a><a href="./" aria-current="page">Reader</a></nav>
+  <nav class="tabs" aria-label="Site"><a href="../" target="_top">Gallery</a><a href="./" aria-current="page">Reader</a></nav>
   <form class="load" id="loadForm">
     <input id="url" type="text" placeholder="Paste a Wikimedia Commons file link or File: name" aria-label="Commons file URL" autocomplete="off" spellcheck="false">
     <button class="btn primary" type="submit">Load file</button>
@@ -199,6 +199,7 @@ async function loadFile(input,startPage){
     $('#url').value=S.host+'/wiki/File:'+name.replace(/ /g,'_');
     document.title=name+' · Commons Reader';
     const q=new URL(location.href); q.searchParams.set('file',name.replace(/ /g,'_')); history.replaceState(null,'',q);
+    if(parent!==window) parent.postMessage({file:name.replace(/ /g,'_'),title:document.title},location.origin);
     $('#empty').hidden=true; $('#spread').hidden=false;
     $('#pageIn').disabled=false; $('#pageIn').max=S.total;
     busy(true,'Preparing pages…','Rendering page 1 of '+S.total);
