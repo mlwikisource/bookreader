@@ -73,9 +73,14 @@ main{flex:1;min-height:0;position:relative;display:flex}
 #loader .spin{width:38px;height:38px;margin:0 auto 10px}
 
 /* footer */
-footer{background:var(--bar);border-top:1px solid var(--line);max-height:34vh;overflow:auto;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px))}
-footer>details>summary{cursor:pointer;font-weight:600;padding:2px 0}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px;margin-top:8px}
+footer{position:relative;background:var(--bar);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;z-index:5}
+.fsum{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fLic{white-space:nowrap}
+#info{display:none;position:absolute;left:0;right:0;bottom:100%;max-height:60vh;overflow:auto;background:var(--bar);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:12px 16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px}
+footer.open #info{display:grid}
+.sheet{cursor:zoom-in}
+body.shift .sheet{cursor:zoom-out}
+@media (max-width:640px){#fLic{display:none}}
 .cols h3{font:600 15px Georgia,serif;margin:6px 0}
 dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px}
 dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
@@ -125,11 +130,11 @@ footer a{color:var(--accent)}
   <button class="arrow" id="next" aria-label="Next pages" disabled>›</button>
   <div id="loader"><div><div class="spin"></div><b id="loadTxt">Loading…</b><div class="small" id="loadSub">Large scans can take a little while</div></div></div>
 </main>
-<footer>
-  <details open>
-    <summary id="fSum">Document information, licence and Wikidata</summary>
-    <div class="cols" id="info"><span class="small">Load a file to see its details here.</span></div>
-  </details>
+<footer id="foot">
+  <span class="fsum" id="fSum">No file loaded</span>
+  <span class="small" id="fLic"></span>
+  <button class="btn" id="fBtn" aria-expanded="false" aria-controls="info">Details ▴</button>
+  <div id="info"><span class="small">Load a file to see its details here.</span></div>
 </footer>
 
 <script>
@@ -259,6 +264,7 @@ function renderInfo(pg,ii){
   const row=(a,b)=>b?`<dt>${a}</dt><dd>${b}</dd>`:'';
   const page=pg.fullurl||('https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(S.name));
   $('#fSum').textContent=S.name;
+  $('#fLic').innerHTML=licLink+' · <a href="'+esc(page)+'" target="_blank" rel="noopener">Commons</a>';
   $('#info').innerHTML=`
   <section><h3>Document</h3><dl>
     ${row('Title',esc(v('ObjectName')||S.name))}
@@ -307,6 +313,10 @@ async function loadWikidata(pageId,my){
 }
 
 /* events */
+$('#fBtn').onclick=()=>{const o=$('#foot').classList.toggle('open');$('#fBtn').setAttribute('aria-expanded',o);$('#fBtn').textContent=o?'Details ▾':'Details ▴';};
+$('#stage').addEventListener('click',e=>{if(!e.target.closest('.sheet'))return;setZoom(S.zoom+(e.shiftKey?-.25:.25));});
+['keydown','keyup'].forEach(t=>document.addEventListener(t,e=>document.body.classList.toggle('shift',e.shiftKey)));
+window.addEventListener('blur',()=>document.body.classList.remove('shift'));
 $('#loadForm').addEventListener('submit',e=>{e.preventDefault();loadFile($('#url').value);});
 $('#sample').addEventListener('click',e=>{e.preventDefault();$('#url').value=SAMPLE;loadFile(SAMPLE);});
 $('#prev').onclick=()=>go(-1); $('#next').onclick=()=>go(1);
