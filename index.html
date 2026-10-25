@@ -1,184 +1,356 @@
 <!DOCTYPE html>
-<html lang="ml">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Malayalam Wikisource Book Gallery</title>
+<title>Commons Reader</title>
 <style>
-:root{--desk:#e4e8ef;--bar:#f7f8fa;--ink:#1b2230;--mute:#5d6778;--line:#c9d0db;--accent:#2a5db0;--accent-ink:#fff;--shadow:0 4px 16px rgba(20,30,50,.18);color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--desk:#161b26;--bar:#202736;--ink:#e8ecf3;--mute:#9aa5b8;--line:#33405a;--accent:#6ea2f0;--accent-ink:#0d1626;--shadow:0 6px 20px rgba(0,0,0,.5);color-scheme:dark}}
-:root[data-theme="dark"]{--desk:#161b26;--bar:#202736;--ink:#e8ecf3;--mute:#9aa5b8;--line:#33405a;--accent:#6ea2f0;--accent-ink:#0d1626;--shadow:0 6px 20px rgba(0,0,0,.5);color-scheme:dark}
+:root{
+  --desk:#dde2ea;--bar:#f7f8fa;--ink:#1b2230;--mute:#5d6778;--line:#c9d0db;--accent:#2a5db0;--accent-ink:#fff;--paper:#fff;--shadow:0 6px 24px rgba(20,30,50,.22);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#161b26;--bar:#202736;--ink:#e8ecf3;--mute:#9aa5b8;--line:#33405a;--accent:#6ea2f0;--accent-ink:#0d1626;--paper:#f5f5f2;--shadow:0 8px 28px rgba(0,0,0,.55);color-scheme:dark;}}
+:root[data-theme="dark"]{--desk:#161b26;--bar:#202736;--ink:#e8ecf3;--mute:#9aa5b8;--line:#33405a;--accent:#6ea2f0;--accent-ink:#0d1626;--paper:#f5f5f2;--shadow:0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--desk);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Malayalam",Roboto,sans-serif;padding-top:env(safe-area-inset-top,0px)}
-a{color:var(--accent)}
+html,body{height:100%;margin:0}
+body{background:var(--desk);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px)}
 button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-header{position:sticky;top:0;z-index:5;background:var(--bar);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
-h1{font:600 18px Georgia,"Noto Serif Malayalam",serif;margin:0 6px 0 0}
-h1 small{display:block;font:400 12px system-ui;color:var(--mute)}
-.f{padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--desk)}
-#q{flex:1 1 220px;min-width:160px}
-.btn{padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bar);cursor:pointer;text-decoration:none;color:var(--ink);display:inline-block}
+
+/* header */
+header{background:var(--bar);border-bottom:1px solid var(--line);padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;z-index:5}
+.brand{font:600 17px Georgia,"Times New Roman",serif;letter-spacing:.2px;margin-right:4px;white-space:nowrap}
+.load{display:flex;flex:1 1 320px;min-width:220px;gap:6px}
+.load input{flex:1;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--desk)}
+.btn{padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bar)}
 .btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn:disabled{opacity:.4;cursor:default}
+.grp{display:flex;align-items:center;gap:4px}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.seg button{border:0;border-right:1px solid var(--line);background:var(--bar);padding:6px 11px;cursor:pointer}
-.seg button:last-child{border:0}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--bar);padding:6px 10px}
+.seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
-#count{color:var(--mute);font-size:13px;white-space:nowrap}
-#prog{height:3px;position:sticky;top:0}
-#prog.on::after{content:"";display:block;height:3px;width:35%;background:var(--accent);animation:sl 1.1s ease-in-out infinite}
-@keyframes sl{0%{margin-left:-35%}100%{margin-left:100%}}
-main{padding:18px 14px 40px;max-width:1500px;margin:0 auto}
-#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:20px 16px}
-.card{background:var(--bar);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
-.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.card[hidden]{display:none}
-.cover{display:block;aspect-ratio:3/4;position:relative;background:repeating-linear-gradient(135deg,#eceef2 0 12px,#e2e6ec 12px 24px);overflow:hidden}
-.cover img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;background:#fff}
-.cover .ph{position:absolute;inset:0;display:grid;place-items:center;padding:12px;text-align:center;color:#5a6577;font:600 13px Georgia,serif}
-.tag{position:absolute;top:6px;right:6px;background:rgba(20,30,50,.78);color:#fff;font-size:11px;letter-spacing:.5px;padding:1px 7px;border-radius:99px}
-.meta{padding:9px 10px 10px;display:flex;flex-direction:column;gap:3px;flex:1}
-.ti{font-weight:600;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.ti a{color:inherit;text-decoration:none}
-.fn{font-size:12px;color:var(--mute);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.ln{margin-top:auto;padding-top:6px;display:flex;gap:10px;font-size:12px;flex-wrap:wrap}
-.msg{text-align:center;color:var(--mute);padding:50px 10px}
-.msg.err{color:#c0392b}
-footer{text-align:center;color:var(--mute);font-size:12.5px;padding:0 14px 24px}
-@media (prefers-reduced-motion:reduce){.card{transition:none}#prog.on::after{animation-duration:2.4s}}
+.pn input{width:62px;padding:6px 6px;text-align:center;border:1px solid var(--line);border-radius:6px;background:var(--desk)}
+.pn span{color:var(--mute);white-space:nowrap}
+.zm{min-width:52px;text-align:center;color:var(--mute)}
+#prog{height:3px;background:transparent;overflow:hidden;position:relative}
+#prog.on::after{content:"";position:absolute;inset:0 auto 0 0;width:35%;background:var(--accent);animation:slide 1.1s ease-in-out infinite}
+@keyframes slide{0%{left:-35%}100%{left:100%}}
+
+/* stage */
+main{flex:1;min-height:0;position:relative;display:flex}
+#stage{flex:1;overflow:auto;padding:18px 64px 28px;display:flex;justify-content:safe center;align-items:safe center}
+#spread{display:flex;gap:18px;align-items:flex-start;perspective:1600px}
+.pg{margin:0;flex:none;text-align:center}
+.sheet{position:relative;background:var(--paper);box-shadow:var(--shadow);border-radius:2px;overflow:hidden}
+.sheet img{display:block;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s}
+.sheet img.ok{opacity:1}
+.sk{position:absolute;inset:0;display:grid;place-items:center;background:repeating-linear-gradient(135deg,#eceef2 0 12px,#e4e7ec 12px 24px);color:#566}
+.sk .spin{width:26px;height:26px}
+.pg figcaption{margin-top:8px;font:600 13px Georgia,serif;color:var(--mute)}
+.spin{border:3px solid rgba(120,130,150,.35);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.turn-next .pg{transform-origin:left center;animation:tn .38s ease-out}
+.turn-prev .pg{transform-origin:right center;animation:tp .38s ease-out}
+@keyframes tn{from{opacity:0;transform:rotateY(-16deg) translateX(34px)}to{opacity:1;transform:none}}
+@keyframes tp{from{opacity:0;transform:rotateY(16deg) translateX(-34px)}to{opacity:1;transform:none}}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:84px;border:0;border-radius:8px;background:color-mix(in srgb,var(--bar) 88%,transparent);color:var(--ink);font-size:26px;box-shadow:0 2px 10px rgba(0,0,0,.2);z-index:3}
+.arrow:hover:not(:disabled){background:var(--accent);color:var(--accent-ink)}
+.arrow:disabled{opacity:.25;cursor:default}
+#prev{left:8px}#next{right:8px}
+.msg{max-width:460px;text-align:center;color:var(--mute);padding:20px}
+.msg h2{font:600 24px Georgia,serif;color:var(--ink);margin:0 0 8px}
+.msg .ex{margin-top:10px;word-break:break-all;font-size:13px}
+.msg a{color:var(--accent)}
+.err{color:#c0392b}
+#loader{position:absolute;inset:0;background:color-mix(in srgb,var(--desk) 82%,transparent);display:none;place-items:center;z-index:6}
+#loader.on{display:grid}
+#loader div{background:var(--bar);padding:20px 28px;border-radius:10px;box-shadow:var(--shadow);text-align:center}
+#loader .spin{width:38px;height:38px;margin:0 auto 10px}
+
+/* footer */
+footer{position:relative;background:var(--bar);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;z-index:5}
+.fsum{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fLic{white-space:nowrap}
+#info{display:none;position:absolute;left:0;right:0;bottom:100%;max-height:60vh;overflow:auto;background:var(--bar);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:12px 16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px}
+footer.open #info{display:grid}
+.sheet{cursor:zoom-in}
+body.shift .sheet{cursor:zoom-out}
+@media (max-width:640px){#fLic{display:none}}
+.cols h3{font:600 15px Georgia,serif;margin:6px 0}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px}
+dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
+footer a{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);border-radius:99px;padding:1px 9px;font-size:12.5px;text-decoration:none}
+.small{font-size:12.5px;color:var(--mute)}
+@media (max-width:640px){#stage{padding:12px 8px 20px}.arrow{width:34px;height:64px;opacity:.85}.brand{width:100%}}
+@media (prefers-reduced-motion:reduce){.turn-next .pg,.turn-prev .pg{animation:none}#prog.on::after{animation-duration:2.4s}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Malayalam Wikisource Books<small>മലയാളം വിക്കിഗ്രന്ഥശാല · Commons PDF &amp; DjVu</small></h1>
-  <input id="q" class="f" type="search" placeholder="Search title or file name…" aria-label="Search">
-  <div class="seg" id="types" role="group" aria-label="File type">
-    <button data-t="" aria-pressed="true">All</button><button data-t="pdf" aria-pressed="false">PDF</button><button data-t="djvu" aria-pressed="false">DjVu</button>
+  <span class="brand">Commons Reader</span>
+  <a class="btn" href="gallery/" title="Malayalam Wikisource book gallery">Gallery</a>
+  <form class="load" id="loadForm">
+    <input id="url" type="text" placeholder="Paste a Wikimedia Commons file link or File: name" aria-label="Commons file URL" autocomplete="off" spellcheck="false">
+    <button class="btn primary" type="submit">Load file</button>
+  </form>
+  <div class="grp pn" title="Go to page">
+    <input id="pageIn" type="number" min="1" value="1" aria-label="Page number" disabled>
+    <span id="pageOf">/ –</span>
   </div>
-  <select id="sort" class="f" aria-label="Sort"><option value="list">List order</option><option value="az">Title A–Z</option><option value="type">File type</option></select>
-  <span id="count"></span>
-  <button class="btn" id="theme" aria-label="Toggle dark mode">◐</button>
+  <div class="seg" role="group" aria-label="Pages on screen" id="layoutSeg">
+    <button data-l="1" aria-pressed="false" title="1 page">1 page</button>
+    <button data-l="2" aria-pressed="true" title="2 pages">2 pages</button>
+    <button data-l="3" aria-pressed="false" title="3 pages">3 pages</button>
+    <button data-l="4" aria-pressed="false" title="4 pages">4 pages</button>
+  </div>
+  <div class="grp">
+    <button class="btn" id="zOut" aria-label="Zoom out">−</button>
+    <span class="zm" id="zLbl">Fit</span>
+    <button class="btn" id="zIn" aria-label="Zoom in">+</button>
+    <button class="btn" id="zFit" title="Fit page to screen">Fit</button>
+    <button class="btn" id="theme" aria-label="Toggle dark mode" title="Light / dark">◐</button>
+  </div>
 </header>
-<div id="prog" class="on"></div>
+<div id="prog"></div>
 <main>
-  <div id="grid"></div>
-  <div class="msg" id="msg">Loading book list…</div>
+  <button class="arrow" id="prev" aria-label="Previous pages" disabled>‹</button>
+  <div id="stage" tabindex="0" aria-live="polite">
+    <div class="msg" id="empty">
+      <h2>Read Commons books on a desk</h2>
+      Paste the link of a PDF or DjVu file from Wikimedia Commons above, then choose how many pages to see at once.
+      <div class="ex"><a href="#" id="sample">Try: Kulastreeyum Chanthapennum Undayathengane.djvu</a></div>
+    </div>
+    <div id="spread" hidden></div>
+  </div>
+  <button class="arrow" id="next" aria-label="Next pages" disabled>›</button>
+  <div id="loader"><div><div class="spin"></div><b id="loadTxt">Loading…</b><div class="small" id="loadSub">Large scans can take a little while</div></div></div>
 </main>
-<footer>Reads <code>books.tsv</code> (file name ⇥ Wikidata QID). Covers are page 1 of each file on Wikimedia Commons; titles come from Wikidata.</footer>
+<footer id="foot">
+  <span class="fsum" id="fSum">No file loaded</span>
+  <span class="small" id="fLic"></span>
+  <button class="btn" id="fBtn" aria-expanded="false" aria-controls="info">Details ▴</button>
+  <div id="info"><span class="small">Load a file to see its details here.</span></div>
+</footer>
 
 <script>
+const COMMONS='https://commons.wikimedia.org/w/api.php', WS='https://ml.wikisource.org/w/api.php', WD='https://www.wikidata.org/w/api.php';
 const $=s=>document.querySelector(s);
-const READER='../', WD='https://www.wikidata.org/w/api.php';
+const S={name:'',total:0,cur:1,layout:2,zoom:1,fit:true,ratio:1.41,token:0};
+const thumbCache=new Map();
+const SAMPLE='https://commons.wikimedia.org/wiki/File:Kulastreeyum_Chanthapennum_Undayathengane.djvu';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let books=[], type='';
+const plain=h=>new DOMParser().parseFromString(h||'','text/html').body.textContent.trim();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-function parseList(text){
-  const out=[], seen=new Set();
-  text.replace(/^\uFEFF/,'').split(/\r?\n/).forEach(line=>{
-    const c=line.split(line.includes('\t')?'\t':',').map(x=>x.trim().replace(/^"|"$/g,''));
-    const f=(c[0]||'').replace(/^(File|Image):/i,'').replace(/_/g,' ').trim();
-    const q=(c[1]||'').match(/Q\d+/i)?.[0].toUpperCase()||'';
-    if(!/\.(pdf|djvu)$/i.test(f)) return;          // skips header, blanks, non-PDF/DjVu rows
-    if(seen.has(f)) return; seen.add(f);
-    out.push({f,q,ext:/\.pdf$/i.test(f)?'pdf':'djvu',label:'',i:out.length});
-  });
-  return out;
+async function api(base,p){
+  const u=new URL(base);
+  Object.entries({format:'json',origin:'*',...p}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r=await fetch(u); if(!r.ok) throw new Error('Network error '+r.status);
+  return r.json();
 }
-const base=f=>f.replace(/\.(pdf|djvu)$/i,'');
-const fileUrl=f=>encodeURIComponent(f.replace(/ /g,'_'));
-
-function render(){
-  const g=$('#grid');
-  g.innerHTML=books.map(b=>{
-    const rd=READER+'?file='+fileUrl(b.f);
-    return `<article class="card" data-i="${b.i}">
-      <a class="cover" href="${rd}" aria-label="Read ${esc(b.f)}">
-        <div class="ph">${esc(base(b.f))}</div>
-        <img loading="lazy" decoding="async" alt="" src="https://commons.wikimedia.org/wiki/Special:FilePath/${fileUrl(b.f)}?width=320">
-        <span class="tag">${b.ext==='pdf'?'PDF':'DjVu'}</span>
-      </a>
-      <div class="meta">
-        <div class="ti"><a href="${rd}">${esc(base(b.f))}</a></div>
-        <div class="fn">${esc(b.f)}</div>
-        <div class="ln">
-          <a href="${rd}">Read</a>
-          ${b.q?`<a href="https://www.wikidata.org/wiki/${b.q}" target="_blank" rel="noopener">${b.q}</a>`:''}
-          <a href="https://commons.wikimedia.org/wiki/File:${fileUrl(b.f)}" target="_blank" rel="noopener">Commons</a>
-          <a href="https://ml.wikisource.org/wiki/Index:${fileUrl(b.f)}" target="_blank" rel="noopener">Wikisource</a>
-        </div></div></article>`;}).join('');
-  g.querySelectorAll('.card').forEach(c=>{
-    const img=c.querySelector('img');
-    img.addEventListener('load',()=>c.querySelector('.ph')?.remove());
-    img.addEventListener('error',()=>{
-      if(img.dataset.ws){img.remove();return;}
-      // not served from Commons: use the file on Malayalam Wikisource
-      img.dataset.ws=1; const b=books[+c.dataset.i];
-      img.src='https://ml.wikisource.org/wiki/Special:FilePath/'+fileUrl(b.f)+'?width=320';
-      const a=c.querySelector('.ln a[href*="commons.wikimedia.org"]');
-      if(a){a.href='https://ml.wikisource.org/wiki/File:'+fileUrl(b.f);a.textContent='File page';}
-    });
-  });
-  applyFilter();
+function parseName(input){
+  let s=(input||'').trim(); if(!s) return '';
+  try{
+    const u=new URL(s);
+    if(u.searchParams.get('title')) s=u.searchParams.get('title');
+    else s=decodeURIComponent(u.pathname.replace(/^\/wiki\//,'').replace(/^.*\/Special:(FilePath|Redirect\/file)\//i,''));
+    if(u.hostname==='upload.wikimedia.org'){const p=u.pathname.split('/').filter(Boolean);s=decodeURIComponent(p[p[0]==='wikipedia'&&p[2]==='thumb'?5:4]||s);}
+  }catch(e){}
+  return s.replace(/^(File|Image):/i,'').replace(/_/g,' ').trim();
 }
-function applyFilter(){
-  const q=$('#q').value.trim().toLowerCase(); let n=0;
-  document.querySelectorAll('.card').forEach(c=>{
-    const b=books[+c.dataset.i];
-    const ok=(!type||b.ext===type)&&(!q||(b.f+' '+b.label+' '+b.q).toLowerCase().includes(q));
-    c.hidden=!ok; if(ok)n++;
-  });
-  $('#count').textContent=n+' of '+books.length+' books';
-  $('#msg').hidden=n>0||!books.length; if(!n&&books.length) $('#msg').textContent='No books match.';
+function busy(on,t,sub){
+  $('#loader').classList.toggle('on',on); $('#prog').classList.toggle('on',on);
+  if(t) $('#loadTxt').textContent=t; if(sub!==undefined) $('#loadSub').textContent=sub;
 }
-function applySort(){
-  const m=$('#sort').value, g=$('#grid'), cards=[...g.children];
-  const key=c=>books[+c.dataset.i];
-  cards.sort((a,b)=>{const x=key(a),y=key(b);
-    if(m==='az') return (x.label||base(x.f)).localeCompare(y.label||base(y.f),'ml');
-    if(m==='type') return x.ext.localeCompare(y.ext)||x.i-y.i;
-    return x.i-y.i;}).forEach(c=>g.appendChild(c));
+function showMsg(html,isErr){
+  $('#spread').hidden=true; const e=$('#empty'); e.hidden=false;
+  e.innerHTML=html; e.classList.toggle('err',!!isErr);
 }
 
-/* titles from Wikidata, 50 IDs per request */
-let labelRun=0;
-async function loadLabels(){
-  const run=++labelRun, ids=[...new Set(books.map(b=>b.q).filter(Boolean))], chunks=[];
-  for(let i=0;i<ids.length;i+=50) chunks.push(ids.slice(i,i+50));
-  $('#prog').classList.add('on');
-  const worker=async()=>{
-    while(chunks.length&&run===labelRun){
-      const ch=chunks.shift();
-      try{
-        const u=new URL(WD);
-        Object.entries({action:'wbgetentities',format:'json',origin:'*',ids:ch.join('|'),props:'labels',languages:'ml|en',languagefallback:'1'}).forEach(([k,v])=>u.searchParams.set(k,v));
-        const d=await (await fetch(u)).json();
-        books.forEach(b=>{
-          const l=d.entities?.[b.q]?.labels; if(!l) return;
-          const t=(l.ml||l.en||Object.values(l)[0])?.value; if(!t) return;
-          b.label=t;
-          const el=document.querySelector(`.card[data-i="${b.i}"] .ti a`); if(el) el.textContent=t;
-        });
-      }catch(e){}
+async function loadFile(input,startPage){
+  const name=parseName(input);
+  if(!name){showMsg('<h2>No file given</h2>Paste a link such as <div class="ex">'+esc(SAMPLE)+'</div>',true);return;}
+  const my=++S.token;
+  busy(true,'Fetching file details…','Contacting Wikimedia Commons');
+  try{
+    const qp={action:'query',titles:'File:'+name,prop:'imageinfo|categories|info',inprop:'url',cllimit:'12',
+      iiprop:'url|size|mime|extmetadata|user|timestamp|sha1|mediatype'};
+    let pg,site='commons',apiUrl=COMMONS;
+    for(const [s,b] of [['commons',COMMONS],['wikisource',WS]]){
+      const d=await api(b,qp); if(my!==S.token) return;
+      const p=Object.values(d.query.pages)[0];
+      if(p&&p.missing===undefined&&p.imageinfo){pg=p;site=s;apiUrl=b;break;}
+      if(s==='commons') busy(true,'Not on Commons','Trying Malayalam Wikisource (File:)…');
     }
-  };
-  await Promise.all([worker(),worker(),worker()]);
-  if(run===labelRun){ $('#prog').classList.remove('on'); applyFilter(); if($('#sort').value==='az') applySort(); }
+    if(!pg) throw new Error('File not found on Commons or Malayalam Wikisource: '+name);
+    const ii=pg.imageinfo[0];
+    if(!/pdf|djvu/i.test(ii.mime)) throw new Error('This reader opens PDF and DjVu files. This file is '+ii.mime+'.');
+    Object.assign(S,{api:apiUrl,site,host:site==='commons'?'https://commons.wikimedia.org':'https://ml.wikisource.org',name,total:ii.pagecount||1,cur:clamp(startPage||1,1,ii.pagecount||1),ratio:(ii.height&&ii.width)?ii.height/ii.width:1.41,pageId:pg.pageid});
+    thumbCache.clear();
+    $('#url').value=S.host+'/wiki/File:'+name.replace(/ /g,'_');
+    document.title=name+' · Commons Reader';
+    const q=new URL(location.href); q.searchParams.set('file',name.replace(/ /g,'_')); history.replaceState(null,'',q);
+    $('#empty').hidden=true; $('#spread').hidden=false;
+    $('#pageIn').disabled=false; $('#pageIn').max=S.total;
+    busy(true,'Preparing pages…','Rendering page 1 of '+S.total);
+    renderInfo(pg,ii);
+    await render(0);
+    busy(false);
+    loadWikidata(pg.pageid,my);
+  }catch(e){
+    if(my!==S.token) return;
+    busy(false); showMsg('<h2>Could not open the file</h2>'+esc(e.message)+'<div class="ex">Check the link and try again, or open another file.</div>',true);
+  }
 }
 
-function setBooks(list){
-  books=list; $('#msg').hidden=!!list.length;
-  if(!list.length){ $('#grid').innerHTML=''; $('#msg').className='msg err'; $('#msg').textContent='No PDF/DjVu file names found in the list.'; $('#msg').hidden=false; $('#prog').classList.remove('on'); $('#count').textContent=''; return; }
-  $('#msg').className='msg'; render(); applySort(); loadLabels();
+function geometry(){
+  const st=$('#stage'), eff=effLayout(), gap=18;
+  const aw=st.clientWidth-(window.innerWidth<=640?16:128), ah=st.clientHeight-70;
+  const w=Math.min((aw-gap*(eff-1))/eff, ah/S.ratio);
+  const wd=Math.max(120,Math.round(w*S.zoom));
+  return {eff,w:wd,h:Math.round(wd*S.ratio)};
+}
+const effLayout=()=>window.innerWidth<=560?1:S.layout;
+function thumb(n,w){
+  const key=n+'@'+w;
+  if(!thumbCache.has(key)){
+    thumbCache.set(key,api(S.api,{action:'query',titles:'File:'+S.name,prop:'imageinfo',iiprop:'url',iiurlwidth:w,iiurlparam:'page'+n+'-'+w+'px'})
+      .then(d=>{const i=Object.values(d.query.pages)[0].imageinfo?.[0];if(!i) throw new Error('no page');return i.thumburl;})
+      .catch(e=>{thumbCache.delete(key);throw e;}));
+  }
+  return thumbCache.get(key);
+}
+const reqW=w=>clamp(Math.ceil(w*Math.min(window.devicePixelRatio||1,2)/100)*100,300,2400);
+
+async function render(dir){
+  const g=geometry(), sp=$('#spread'), w=reqW(g.w), pages=[];
+  for(let n=S.cur;n<S.cur+g.eff&&n<=S.total;n++) pages.push(n);
+  sp.className=''; void sp.offsetWidth;
+  sp.className=dir>0?'turn-next':dir<0?'turn-prev':'';
+  sp.innerHTML=pages.map(n=>`<figure class="pg" style="width:${g.w}px"><div class="sheet" style="width:${g.w}px;height:${g.h}px" data-n="${n}"><div class="sk"><div class="spin"></div></div><img alt="Page ${n}"></div><figcaption>Page ${n}</figcaption></figure>`).join('');
+  updateUI(g);
+  const tok=S.token, jobs=pages.map(n=>{
+    const sheet=sp.querySelector(`.sheet[data-n="${n}"]`), img=sheet.querySelector('img');
+    return thumb(n,w).then(url=>new Promise((res,rej)=>{img.onload=()=>{img.classList.add('ok');sheet.querySelector('.sk')?.remove();res()};img.onerror=()=>rej(new Error('image'));img.src=url;}))
+      .catch(()=>{ if(tok!==S.token) return; const sk=sheet.querySelector('.sk'); if(sk) sk.innerHTML='<div style="text-align:center;padding:10px"><div>Page did not load</div><button class="btn" style="margin-top:8px">Retry</button></div>',sk.querySelector('button').onclick=()=>render(0);});
+  });
+  await Promise.all(jobs);
+  // preload next spread
+  for(let n=S.cur+g.eff;n<S.cur+g.eff*2&&n<=S.total;n++) thumb(n,w).then(u=>{new Image().src=u}).catch(()=>{});
+}
+function updateUI(g){
+  g=g||geometry();
+  const last=Math.min(S.total,S.cur+g.eff-1);
+  $('#pageIn').value=S.cur; $('#pageOf').textContent=(last>S.cur?'– '+last+' ':'')+'/ '+S.total;
+  $('#prev').disabled=S.cur<=1; $('#next').disabled=S.cur+g.eff>S.total;
+  $('#zLbl').textContent=S.fit?'Fit':Math.round(S.zoom*100)+'%';
+  document.querySelectorAll('#layoutSeg button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.l===S.layout)));
+}
+function go(dir){
+  if(!S.total) return; const eff=effLayout();
+  const n=clamp(S.cur+dir*eff,1,S.total); if(n===S.cur) return;
+  S.cur=n; render(dir);
+}
+function jump(n){ if(!S.total) return; n=clamp(Math.round(n)||1,1,S.total); const d=n-S.cur; S.cur=n; render(d>0?1:d<0?-1:0); }
+function setZoom(z){ if(!S.total) return; S.zoom=clamp(Math.round(z*100)/100,.4,3); S.fit=Math.abs(S.zoom-1)<.001; render(0); }
+
+/* info footer */
+function renderInfo(pg,ii){
+  const m=ii.extmetadata||{}, v=k=>plain(m[k]?.value);
+  const cats=(pg.categories||[]).map(c=>c.title.replace(/^Category:/,''));
+  const lic=v('LicenseShortName')||v('UsageTerms')||'Not stated';
+  const licLink=m.LicenseUrl?.value?`<a href="${esc(m.LicenseUrl.value)}" target="_blank" rel="noopener">${esc(lic)}</a>`:esc(lic);
+  const mb=(ii.size/1048576).toFixed(1);
+  const row=(a,b)=>b?`<dt>${a}</dt><dd>${b}</dd>`:'';
+  const page=pg.fullurl||('https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(S.name));
+  $('#fSum').textContent=S.name;
+  $('#fLic').innerHTML=licLink+' · <a href="'+esc(page)+'" target="_blank" rel="noopener">'+(S.site==='commons'?'Commons':'Wikisource')+'</a>';
+  $('#info').innerHTML=`
+  <section><h3>Document</h3><dl>
+    ${row('Title',esc(v('ObjectName')||S.name))}
+    ${row('Description',esc(v('ImageDescription')).slice(0,400))}
+    ${row('Author',esc(v('Artist')))}
+    ${row('Date',esc(v('DateTimeOriginal')||v('DateTime')))}
+    ${row('Source',esc(v('Credit')))}
+    ${row('Format',esc(ii.mime)+' · '+S.total+' pages · '+mb+' MB')}
+    ${row('Uploader',`<a href="${S.host}/wiki/User:${encodeURIComponent(ii.user)}" target="_blank" rel="noopener">${esc(ii.user)}</a> on ${esc((ii.timestamp||'').slice(0,10))}`)}
+  </dl></section>
+  <section><h3>Licence</h3><dl>
+    ${row('Licence',licLink)}
+    ${row('Copyright status',esc(v('Copyrighted')==='True'?'Copyrighted':v('Copyrighted')==='False'?'Public domain':v('Copyrighted')))}
+    ${row('Attribution',esc(v('Attribution')||(v('AttributionRequired')==='true'?'Required':'')))}
+    ${row('Restrictions',esc(v('Restrictions')))}
+    ${row('Categories',cats.length?`<span class="chips">${cats.map(c=>`<a class="chip" target="_blank" rel="noopener" href="${S.host}/wiki/Category:${encodeURIComponent(c.replace(/ /g,'_'))}">${esc(c)}</a>`).join('')}</span>`:'')}
+    ${row('Links',`<a href="${esc(page)}" target="_blank" rel="noopener">${S.site==='commons'?'Commons':'Wikisource'} page</a> · <a href="${esc(ii.url)}" target="_blank" rel="noopener">Original file</a> · <a href="${esc(page)}?action=history" target="_blank" rel="noopener">History</a>`)}
+  </dl></section>
+  <section><h3>Wikidata &amp; structured data</h3><div id="wd" class="small">Looking up structured data…</div></section>`;
+}
+const PROPS=['P180','P921','P170','P31','P407','P136','P195','P577','P275','P6216','P7482','P1433'];
+async function loadWikidata(pageId,my){
+  const box=()=>my===S.token&&$('#wd');
+  if(S.site!=='commons'){ if(box()) box().innerHTML='This file is hosted on Malayalam Wikisource, which has no Commons structured data. <a href="'+S.host+'/wiki/File:'+encodeURIComponent(S.name.replace(/ /g,'_'))+'" target="_blank" rel="noopener">File page</a>'; return; }
+  try{
+    const d=await api(COMMONS,{action:'wbgetentities',ids:'M'+pageId,props:'claims'});
+    const claims=d.entities?.['M'+pageId]?.statements||d.entities?.['M'+pageId]?.claims||{};
+    const props=PROPS.filter(p=>claims[p]);
+    if(!props.length){ if(box()) box().innerHTML='No structured data on this file yet. <a href="https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(S.name.replace(/ /g,'_'))+'" target="_blank" rel="noopener">Add it on Commons</a>.'; return; }
+    const ids=new Set(props);
+    const val=s=>{const dv=s.mainsnak?.datavalue; if(!dv) return null;
+      if(dv.type==='wikibase-entityid') return {q:dv.value.id};
+      if(dv.type==='string') return {t:dv.value};
+      if(dv.type==='monolingualtext') return {t:dv.value.text};
+      if(dv.type==='time') return {t:dv.value.time.replace(/^\+/,'').slice(0,10)};
+      return null;};
+    props.forEach(p=>claims[p].forEach(s=>{const x=val(s);if(x?.q)ids.add(x.q);}));
+    const arr=[...ids].slice(0,50);
+    const w=await api(WD,{action:'wbgetentities',ids:arr.join('|'),props:'labels',languages:'ml|en',languagefallback:'1'});
+    const L=id=>{const e=w.entities?.[id];const l=e?.labels;return l?(l.ml||l.en||Object.values(l)[0])?.value:id;};
+    const rows=props.map(p=>{
+      const items=claims[p].map(val).filter(Boolean).slice(0,8).map(x=>x.q
+        ?`<a class="chip" target="_blank" rel="noopener" href="https://www.wikidata.org/wiki/${x.q}">${esc(L(x.q))}</a>`:`<span>${esc(x.t)}</span>`).join(' ');
+      return `<dt><a href="https://www.wikidata.org/wiki/Property:${p}" target="_blank" rel="noopener">${esc(L(p))}</a></dt><dd class="chips">${items}</dd>`;}).join('');
+    if(box()) box().innerHTML='<dl>'+rows+'</dl>';
+  }catch(e){ if(box()) box().textContent='Wikidata details could not be loaded right now.'; }
 }
 
-fetch('books.tsv').then(r=>{if(!r.ok)throw 0;return r.text();}).then(t=>setBooks(parseList(t)))
- .catch(()=>{ $('#prog').classList.remove('on'); $('#msg').className='msg err'; $('#msg').innerHTML='Could not load <code>books.tsv</code>. Put it in the same folder as this page.'; });
+/* events */
+$('#fBtn').onclick=()=>{const o=$('#foot').classList.toggle('open');$('#fBtn').setAttribute('aria-expanded',o);$('#fBtn').textContent=o?'Details ▾':'Details ▴';};
+$('#stage').addEventListener('click',e=>{if(!e.target.closest('.sheet'))return;setZoom(S.zoom+(e.shiftKey?-.25:.25));});
+['keydown','keyup'].forEach(t=>document.addEventListener(t,e=>document.body.classList.toggle('shift',e.shiftKey)));
+window.addEventListener('blur',()=>document.body.classList.remove('shift'));
+$('#loadForm').addEventListener('submit',e=>{e.preventDefault();loadFile($('#url').value);});
+$('#sample').addEventListener('click',e=>{e.preventDefault();$('#url').value=SAMPLE;loadFile(SAMPLE);});
+$('#prev').onclick=()=>go(-1); $('#next').onclick=()=>go(1);
+$('#zIn').onclick=()=>setZoom(S.zoom+.15); $('#zOut').onclick=()=>setZoom(S.zoom-.15); $('#zFit').onclick=()=>{S.fit=true;setZoom(1);};
+$('#pageIn').addEventListener('change',e=>jump(+e.target.value));
+$('#layoutSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.layout=+b.dataset.l;updateUI();if(S.total)render(0);});
+$('#theme').onclick=()=>{const r=document.documentElement,dark=getComputedStyle(r).colorScheme==='dark';r.dataset.theme=dark?'light':'dark';};
+document.addEventListener('keydown',e=>{
+  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown') go(1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp') go(-1);
+  else if(e.key==='+'||e.key==='=') setZoom(S.zoom+.15);
+  else if(e.key==='-') setZoom(S.zoom-.15);
+  else if(e.key==='0') setZoom(1);
+  else if(e.key==='Home') jump(1); else if(e.key==='End') jump(S.total);
+  else if('1234'.includes(e.key)&&e.key){S.layout=+e.key;updateUI();if(S.total)render(0);}
+});
+let rt; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.total)render(0);},180);});
+let tx=null; $('#stage').addEventListener('touchstart',e=>{tx=e.touches.length===1?e.touches[0].clientX:null;},{passive:true});
+$('#stage').addEventListener('touchend',e=>{if(tx===null||S.zoom>1)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>70)go(dx<0?1:-1);tx=null;});
 
-$('#q').addEventListener('input',applyFilter);
-$('#sort').addEventListener('change',applySort);
-$('#types').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;type=b.dataset.t;
-  document.querySelectorAll('#types button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));applyFilter();});
-$('#theme').onclick=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).colorScheme==='dark'?'light':'dark';};
+/* auto-load: ?file=File_name.djvu (or a full Commons URL), optional &page=12 */
+(function(){
+  const q=new URLSearchParams(location.search), f=q.get('file')||q.get('url');
+  if(f){ $('#url').value=f; loadFile(f,+q.get('page')||1); }
+})();
 </script>
 </body>
 </html>
